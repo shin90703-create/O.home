@@ -11,7 +11,7 @@
 import React, { useEffect, useState } from 'react';
 import { initSupabase } from '@/lib/supabase';
 import { primeSettings } from '@/lib/settingStore';
-import { pickedHomeId, setCurrentHomeId } from '@/lib/home';
+import { pickedHomeId, pickedMemberHomeId, setCurrentHomeId } from '@/lib/home';
 
 export function ServerBoot({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -28,7 +28,19 @@ export function ServerBoot({ children }: { children: React.ReactNode }) {
         let home: string | null = null;
         try {
           const u = await be.currentUser();
-          if (u) home = u.role === 'admin' ? pickedHomeId() : (u.homeId ?? null);
+          if (u) {
+            if (u.role === 'admin') home = pickedHomeId();
+            else {
+              const ids = [...new Set([...(u.homeId ? [u.homeId] : []), ...(u.homeIds ?? [])])];
+              const chosen = pickedMemberHomeId(u.id);
+              // 여러 자관에 속하면 선택 화면을 먼저 보여준다.
+              home = ids.length === 1 ? ids[0] : (chosen && ids.includes(chosen) ? chosen : null);
+              if (home) {
+                const available = await be.listHomes();
+                if (!available.some(h => h.id === home)) home = null;
+              }
+            }
+          }
         } catch { /* 네트워크·규칙 문제면 홈 없음으로 */ }
         be.setHome(home);
         setCurrentHomeId(home);
