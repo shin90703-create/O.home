@@ -572,12 +572,12 @@ export default function RpPage() {
                   }
                   const ch = rpChars.find(c => c.id === m.charId);
                   const name = ch?.name ?? '';
-                  // 영역은 「보는 사람」 기준 (v2.0 사용자 확정): 내가 권한을 가진 캐릭터가 오른쪽,
-                  // 아닌 캐릭터가 왼쪽. 관리자에게는 자캐(own)가 자기 캐릭터다.
-                  // 그래서 같은 방이라도 사람마다 좌우가 반대로 보인다(각자 자기 쪽이 오른쪽).
-                  // 삭제된 캐릭터는 발화 당시 기록(charOwn)으로 판단.
+                  // 말풍선 좌우는 실제 작성자(authorId)가 아니라 캐릭터 기준.
+                  // 관리자가 예전 역극을 양쪽 캐릭터로 옮겨 적어도 자캐(own)는 오른쪽,
+                  // 상대 캐릭터는 왼쪽이다. 회원은 권한 받은 자기 캐릭터가 오른쪽.
+                  // 삭제된 캐릭터는 발화 당시 기록(charOwn)으로 판별한다.
                   const rightSide = ch
-                    ? (!!charGrant(ch, user.id) || (!!ch.own && isAdmin))
+                    ? (isAdmin ? !!ch.own : !!charGrant(ch, user.id))
                     : (!!m.charOwn && isAdmin);
                   // 메신저 방의 이름 — 말하는 캐릭터가 바뀔 때만 (사용자 확정): 같은 캐릭터가 이어 말하면 생략,
                   // 상대 글 바로 다음에 내가 일반 RP를 쓰는 식으로 바뀌면 적는다. 기본 방은 늘 적는다
