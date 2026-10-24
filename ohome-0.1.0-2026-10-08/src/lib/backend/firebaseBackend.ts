@@ -48,7 +48,7 @@ export async function createFirebaseBackend(cfg: FirebaseCfg): Promise<Backend> 
   const storage = stMod.getStorage(app);
 
   const {
-    collection, doc, getDoc, getDocs, getDocsFromServer, setDoc, deleteDoc, query, where, onSnapshot, writeBatch, limit,
+    collection, doc, getDoc, getDocs, getDocsFromServer, setDoc, deleteDoc, query, where, onSnapshot, writeBatch, limit, arrayUnion,
   } = fsMod;
   type Cons = ReturnType<typeof where>;
 
@@ -118,21 +118,23 @@ export async function createFirebaseBackend(cfg: FirebaseCfg): Promise<Backend> 
     let avatarUrl: string | undefined;
     let avatarColor: string | undefined;
     let userHome: string | undefined;
+    let userHomes: string[] = [];
     try {
       const p = await getDoc(doc(db, 'profiles', u.uid));
       if (p.exists()) {
-        const d = p.data() as { nickname?: string; avatarUrl?: string; avatarColor?: string; homeId?: string };
+        const d = p.data() as { nickname?: string; avatarUrl?: string; avatarColor?: string; homeId?: string; homeIds?: string[] };
         nickname = d.nickname ?? nickname;
         avatarUrl = d.avatarUrl;
         avatarColor = d.avatarColor;
         userHome = d.homeId || undefined;
+        userHomes = [...new Set([...(userHome ? [userHome] : []), ...(Array.isArray(d.homeIds) ? d.homeIds : [])])];
       }
     } catch { /* 규칙이 막으면 기본값 */ }
     const own = await ownerInfo();
     const isAdmin = !!own && (own.uid === u.uid || (own.admins ?? []).includes(u.uid));
     return {
       id: u.uid, nickname, role: isAdmin ? 'admin' : 'member',
-      email: u.email ?? undefined, avatarUrl, avatarColor, homeId: userHome,
+      email: u.email ?? undefined, avatarUrl, avatarColor, homeId: userHome, homeIds: userHomes,
     };
   };
 
@@ -298,13 +300,14 @@ export async function createFirebaseBackend(cfg: FirebaseCfg): Promise<Backend> 
       const snap = await getDocs(collection(db, 'profiles'));
       return snap.docs.map(d => {
         // avatarUrl도 함께 — 이미지 정리가 프로필 사진을 「안 쓰는 파일」로 지우지 않게 (v2.0 사용자 제보)
-        const v = d.data() as { nickname?: string; avatarUrl?: string; homeId?: string };
+        const v = d.data() as { nickname?: string; avatarUrl?: string; homeId?: string; homeIds?: string[] };
         return {
           id: d.id,
           nickname: v.nickname ?? d.id,
           role: (admins.has(d.id) ? 'admin' : 'member') as 'admin' | 'member',
           avatarUrl: v.avatarUrl,
           homeId: v.homeId || undefined,
+          homeIds: [...new Set([...(v.homeId ? [v.homeId] : []), ...(Array.isArray(v.homeIds) ? v.homeIds : [])])],
         };
       });
     },
@@ -322,11 +325,13 @@ export async function createFirebaseBackend(cfg: FirebaseCfg): Promise<Backend> 
         return snap.docs.map(d => rowOf(d.id, d.data() as Record<string, unknown>))
           .sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
       }
-      // 회원은 자기 홈 하나만 (규칙도 그 하나만 읽게 한다)
+      // 회원은 자신에게 연결된 자관만 문서 단위로 조회한다 (전체 homes 조회 금지).
       const me = auth.currentUser ? await toUser(auth.currentUser) : null;
-      if (!me?.homeId) return [];
-      const snap = await getDoc(doc(db, 'homes', me.homeId));
-      return snap.exists() ? [rowOf(snap.id, snap.data() as Record<string, unknown>)] : [];
+      const ids = me?.homeIds ?? (me?.homeId ? [me.homeId] : []);
+      const snaps = await Promise.all(ids.map(id => getDoc(doc(db, 'homes', id))));
+      return snaps.filter(s => s.exists())
+        .map(s => rowOf(s.id, s.data() as Record<string, unknown>))
+        .sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
     },
 
     async createHome(h) {
@@ -356,8 +361,19 @@ export async function createFirebaseBackend(cfg: FirebaseCfg): Promise<Backend> 
     },
 
     async setMemberHome(uid, home) {
-      // 규칙: 총관리자는 프로필을 마음대로 고칠 수 있다 (회원 본인은 homeId를 못 바꾼다)
-      await setDoc(doc(db, 'profiles', uid), { homeId: home ?? null }, { merge: true });
+      // 총관리자만 연결할 수 있다. 기존 homeId는 변경하지 않고 homeIds에 추가한다.
+      const target = doc(db, 'profiles', uid);
+      if (!home) {
+        await setDoc(target, { homeId: null, homeIds: [] }, { merge: true });
+        return;
+      }
+      const snap = await getDoc(target);
+      if (!snap.exists()) throw new Error('회원 프로필이 존재하지 않습니다.');
+      const oldHome = snap.data().homeId as string | undefined;
+      await setDoc(target, {
+        ...(oldHome ? {} : { homeId: home }),
+        homeIds: arrayUnion(home),
+      }, { merge: true });
     },
 
     async fetchList<T extends ListItem>(coll: string): Promise<T[]> {
