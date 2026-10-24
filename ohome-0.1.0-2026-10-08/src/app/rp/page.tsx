@@ -86,8 +86,9 @@ export default function RpPage() {
   const cntS = (s: 'all' | 'ongoing' | 'done') =>
     allMine.filter(r => s === 'all' || r.status === s).length;
 
-  // 발화자 선택 — 관리자는 기반 자관 멤버 전부(+자유 개설이면 자캐 전부),
-  // 회원은 권한(grants — 역극 플레이/편집)이 부여된 캐릭터만 (3차 회원-캐릭터 연결, v1.9)
+  // 발화자 선택 — 관리자는 양쪽 캐릭터로 발화 가능 (다른 곳의 역극 기록을 직접 옮기기 위함).
+  // 일반 회원은 권한(grants — 역극 플레이/편집)이 부여된 캐릭터만 선택 가능.
+  // 대리로 옮긴 발화도 authorId는 실제 작성자(관리자)로 남는다.
   const rel = rels.find(r => r.id === sel?.relId);
   // 자관에서 잡은 1:1 얼굴 위치 — 로그 모달(프로필 사진 옵션)에도 같은 값을 넘긴다
   const faceOf = (c?: Character) => (c ? relFaceCrop(rel, sel?.auId, c) : undefined);
@@ -108,10 +109,10 @@ export default function RpPage() {
       // 발화자 목록도 자관에 보이는 순서(왼쪽 먼저)로 — 처음 고른 발화자가 왼쪽 캐릭터가 된다
       const ids = pairSides(rel) ?? rel.members.map(m => m.charId);
       const members = ids.map(id => rpChars.find(c => c.id === id)).filter(Boolean) as Character[];
-      // 관리자도 자캐만 (사용자 확정 — 상대 캐릭터까지 목록에 뜨는 게 싫다). 상대 오너는 권한 받은 캐릭터만
-      return isAdmin ? members.filter(c => c.own) : members.filter(c => !!charGrant(c, user?.id));
+      // 관리자: 옛 역극을 옮길 때 양쪽 캐릭터를 번갈아 선택. 회원: 부여받은 캐릭터만.
+      return isAdmin ? members : members.filter(c => !!charGrant(c, user?.id));
     }
-    return isAdmin ? rpChars.filter(c => c.own) : rpChars.filter(c => !!charGrant(c, user?.id));
+    return isAdmin ? rpChars : rpChars.filter(c => !!charGrant(c, user?.id));
   }, [rel, rpChars, isAdmin, user?.id]);
 
   const [speaker, setSpeaker] = useState<string>('');   // charId | 'desc' (플레이어 발화는 없앴다, v2.0)
@@ -571,12 +572,12 @@ export default function RpPage() {
                   }
                   const ch = rpChars.find(c => c.id === m.charId);
                   const name = ch?.name ?? '';
-                  // 영역은 「보는 사람」 기준 (v2.0 사용자 확정): 내가 권한을 가진 캐릭터가 오른쪽,
-                  // 아닌 캐릭터가 왼쪽. 관리자에게는 자캐(own)가 자기 캐릭터다.
-                  // 그래서 같은 방이라도 사람마다 좌우가 반대로 보인다(각자 자기 쪽이 오른쪽).
-                  // 삭제된 캐릭터는 발화 당시 기록(charOwn)으로 판단.
+                  // 말풍선 좌우는 실제 작성자(authorId)가 아니라 캐릭터 기준.
+                  // 관리자가 예전 역극을 양쪽 캐릭터로 옮겨 적어도 자캐(own)는 오른쪽,
+                  // 상대 캐릭터는 왼쪽이다. 회원은 권한 받은 자기 캐릭터가 오른쪽.
+                  // 삭제된 캐릭터는 발화 당시 기록(charOwn)으로 판별한다.
                   const rightSide = ch
-                    ? (!!charGrant(ch, user.id) || (!!ch.own && isAdmin))
+                    ? (isAdmin ? !!ch.own : !!charGrant(ch, user.id))
                     : (!!m.charOwn && isAdmin);
                   // 메신저 방의 이름 — 말하는 캐릭터가 바뀔 때만 (사용자 확정): 같은 캐릭터가 이어 말하면 생략,
                   // 상대 글 바로 다음에 내가 일반 RP를 쓰는 식으로 바뀌면 적는다. 기본 방은 늘 적는다
