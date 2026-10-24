@@ -1300,13 +1300,15 @@ body.edit-on .main-grid.gridlines .wgt{outline-offset:0}
 .tl-item:last-child{padding-bottom:0}
 .tl-item::before{content:"";position:absolute;left:-6px;top:2px;width:10px;height:10px;border-radius:50%;background:#fff;border:2.5px solid var(--steel-3)}
 .tl-item .era{font-size:calc(10px*var(--fs,1));letter-spacing:.15em;color:var(--faint);margin-bottom:4px}
-.tl-item .desc{font-size:calc(12.5px*var(--fs,1));line-height:1.75;color:#3a3f47;margin-bottom:9px;white-space:pre-line}
+.tl-item .desc{font-size:calc(12.5px*var(--fs,1));line-height:1.75;color:var(--page-desc,#9aa0a9);margin-bottom:9px;white-space:pre-line}
 /* 말풍선: 캐릭터 테마색(--cc, 저알파) — 좌우 여백 19%로 가운데 몰기 (v1.8) */
 .tl-say{max-width:48%;margin-bottom:7px;--cc:93,99,109}
 .tl-say.l{margin-left:19%}
 .tl-say.r{margin-right:19%}
 .timeline.multi .tl-say.l{margin-left:0;max-width:62%} /* 다인: 왼쪽 정렬 */
-.tl-say .who{font-size:calc(10px*var(--fs,1));letter-spacing:.1em;color:rgb(var(--cc));font-weight:700;margin-bottom:3px}
+/* 인물 고유색을 밝게 섞고 옅은 빛 번짐을 더해 어두운 배경에서도 이름을 읽을 수 있게. */
+.tl-say .who{font-size:calc(10px*var(--fs,1));letter-spacing:.1em;color:color-mix(in srgb,rgb(var(--cc)) 45%,#fff);font-weight:700;margin-bottom:3px;
+  text-shadow:0 0 3px rgba(255,255,255,.50),0 0 9px rgba(255,255,255,.20)}
 .tl-say .bub{display:inline-block;padding:8px 13px;border-radius:12px;font-size:calc(12px*var(--fs,1));line-height:1.6;white-space:pre-line;
   background:rgba(var(--cc),.10);border:1px solid rgba(var(--cc),.22);color:var(--ink)}
 .tl-say.l .bub{border-bottom-left-radius:3px}
