@@ -1306,7 +1306,10 @@ body.edit-on .main-grid.gridlines .wgt{outline-offset:0}
 .tl-say.l{margin-left:19%}
 .tl-say.r{margin-right:19%}
 .timeline.multi .tl-say.l{margin-left:0;max-width:62%} /* 다인: 왼쪽 정렬 */
-.tl-say .who{font-size:calc(10px*var(--fs,1));letter-spacing:.1em;color:rgb(var(--cc));font-weight:700;margin-bottom:3px}
+/* 캐릭터 이름은 기존 고유색을 그대로 쓰고 밝은 회색 외곽선만 얇게 더한다.
+   paint-order로 테두리를 글자 뒤에 그려 원래 글자색과 획을 보존한다. */
+.tl-say .who{font-size:calc(10px*var(--fs,1));letter-spacing:.1em;color:rgb(var(--cc));font-weight:700;margin-bottom:3px;
+  -webkit-text-stroke:.9px #c0c4cb;paint-order:stroke fill}
 .tl-say .bub{display:inline-block;padding:8px 13px;border-radius:12px;font-size:calc(12px*var(--fs,1));line-height:1.6;white-space:pre-line;
   background:rgba(var(--cc),.10);border:1px solid rgba(var(--cc),.22);color:var(--ink)}
 .tl-say.l .bub{border-bottom-left-radius:3px}
