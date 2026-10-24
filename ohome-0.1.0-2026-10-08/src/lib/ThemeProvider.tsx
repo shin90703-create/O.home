@@ -113,6 +113,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       ? {
         ...derivePointTheme(pageColor.color, pageColor.tone ?? draft.pointTone),
         pageHead: site.pageHead, pageHeadM: site.pageHeadM,
+        // 자관 상세의 임시 포인트색에서도 이 자관에 저장한 역극 버튼 색은 유지
+        rpBtnBg: site.rpBtnBg, rpBtnFg: site.rpBtnFg,
+        rpBtnBd: site.rpBtnBd, rpBtnHover: site.rpBtnHover,
+        rpStatusBg: site.rpStatusBg, rpStatusFg: site.rpStatusFg, rpStatusBd: site.rpStatusBd,
       }
       : site);
     // 페이지 배경 지정 (v2.0) — 팔레트를 적용한 뒤에 배경 세 값만 덮어쓴다.
