@@ -13,7 +13,7 @@ rules_version = '2';
 //
 // 누가 무엇을 보나
 //   · 비로그인: 아무것도 못 읽는다 (홈은 전부 로그인 뒤에만)
-//   · 회원: 프로필의 homeId 홈 하나만. 가입코드가 그 홈을 정하고, 바꿀 수 없다
+//   · 회원: 프로필의 homeId 또는 homeIds에 연결된 자관만. 가입코드가 그 홈을 정하고, 바꿀 수 없다
 //   · 총관리자(meta/owner): 모든 홈
 // ============================================================
 
@@ -46,7 +46,8 @@ service cloud.firestore {
     // 이 홈의 회원인가 — 총관리자는 모든 홈
     function inHome(homeId) {
       return isAdmin()
-        || (hasProfile() && myProfile().keys().hasAny(['homeId']) && myProfile().homeId == homeId);
+        || (hasProfile() && ((myProfile().keys().hasAny(['homeId']) && myProfile().homeId == homeId)
+          || homeId in myProfile().get('homeIds', [])));
     }
 
     // 콘텐츠 컬렉션 목록 — 여기 없는 이름은 아무 권한도 없다
@@ -80,7 +81,8 @@ service cloud.firestore {
                == request.resource.data.joinCode)
       ));
       allow update: if isAdmin() || (signedIn() && request.auth.uid == uid
-        && request.resource.data.get('homeId', null) == resource.data.get('homeId', null));
+        && request.resource.data.get('homeId', null) == resource.data.get('homeId', null)
+        && request.resource.data.get('homeIds', []) == resource.data.get('homeIds', []));
       allow delete: if isAdmin();
     }
 
