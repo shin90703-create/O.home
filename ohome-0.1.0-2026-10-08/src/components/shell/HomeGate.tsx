@@ -8,12 +8,36 @@
 //
 // 홈 자체는 부팅(ServerBoot)에서 이미 정해져 있다 — 여기서는 그 결과에 맞는 화면만 고른다.
 // 로컬 모드(백엔드 없음)는 홈 개념이 없으니 그대로 통과.
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { isServerMode } from '@/lib/backend';
-import { currentHomeId } from '@/lib/home';
+import { currentHomeId, enterMemberHome } from '@/lib/home';
+import { backend } from '@/lib/backend';
+import type { HomeRow } from '@/lib/backend/types';
 import { LoginCard } from './LoginCard';
 import { HomeList } from './HomeList';
+
+function MemberHomePicker({ uid }: { uid: string }) {
+  const [homes, setHomes] = useState<HomeRow[]>([]);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let alive = true;
+    backend()?.listHomes().then(rows => { if (alive) setHomes(rows); })
+      .catch(() => { if (alive) setError('자관 목록을 불러오지 못했습니다.'); });
+    return () => { alive = false; };
+  }, []);
+  return <div className="setup-wrap">
+    <div className="panel setup-box wide" style={{ margin: 'auto' }}>
+      <h1 style={{ marginBottom: 14 }}>접속할 자관 선택</h1>
+      {error && <p className="setup-err">{error}</p>}
+      <div style={{ display: 'grid', gap: 10 }}>
+        {homes.map(h => <button key={h.id} className="btn btn-ghost" style={{ padding: 16, textAlign: 'left' }}
+          onClick={() => enterMemberHome(uid, h.id)}>{h.name} →</button>)}
+      </div>
+      {!homes.length && !error && <p className="hint">참여 중인 자관을 확인하고 있습니다.</p>}
+    </div>
+  </div>;
+}
 
 export function HomeGate({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, ready, logout } = useAuth();
@@ -31,6 +55,9 @@ export function HomeGate({ children }: { children: React.ReactNode }) {
     );
   }
   if (isAdmin && !home) return <HomeList />;
+  if (!home && user.role === 'member') {
+    return <MemberHomePicker uid={user.id} />;
+  }
   if (!home) {
     return (
       <div className="setup-wrap">
