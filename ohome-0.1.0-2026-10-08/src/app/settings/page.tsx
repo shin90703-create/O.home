@@ -485,6 +485,25 @@ function DesignPane() {
         </div>
       </div>
 
+      {/* 역극방 상단 버튼·상태표시 — 다른 화면 버튼은 바꾸지 않음 */}
+      <div className="set-row" style={{ flexWrap: 'wrap' }}>
+        <div className="l"><b>역극 상단 버튼</b><small>RENAME · END · LOG · DELETE 등의 배경·글씨·테두리·마우스 올렸을 때 배경색</small></div>
+        <div className="cp-grid2">
+          <CP label="배경" k="rpBtnBg" def="#292c33" />
+          <CP label="글씨" k="rpBtnFg" def="#d6dae0" />
+          <CP label="테두리" k="rpBtnBd" def="#484c55" />
+          <CP label="호버 배경" k="rpBtnHover" def="#363a43" />
+        </div>
+      </div>
+      <div className="set-row">
+        <div className="l"><b>역극 진행 상태</b><small>진행중 · 완결 상태 표시의 배경·글씨·테두리색</small></div>
+        <div className="cp-group">
+          <CP label="배경" k="rpStatusBg" def="#30343b" />
+          <CP label="글씨" k="rpStatusFg" def="#d9c66b" />
+          <CP label="테두리" k="rpStatusBd" def="#4a4d52" />
+        </div>
+      </div>
+
       {/* 사이트 역할 폰트 (5.1) — 폰트 라이브러리(내장+직접 등록)에서 선택 + 굵기·크기 보정 */}
       <FontRoleRow role="title" />
       <FontRoleRow role="pagetitle" />
