@@ -86,8 +86,9 @@ export default function RpPage() {
   const cntS = (s: 'all' | 'ongoing' | 'done') =>
     allMine.filter(r => s === 'all' || r.status === s).length;
 
-  // 발화자 선택 — 관리자는 기반 자관 멤버 전부(+자유 개설이면 자캐 전부),
-  // 회원은 권한(grants — 역극 플레이/편집)이 부여된 캐릭터만 (3차 회원-캐릭터 연결, v1.9)
+  // 발화자 선택 — 관리자는 양쪽 캐릭터로 발화 가능 (다른 곳의 역극 기록을 직접 옮기기 위함).
+  // 일반 회원은 권한(grants — 역극 플레이/편집)이 부여된 캐릭터만 선택 가능.
+  // 대리로 옮긴 발화도 authorId는 실제 작성자(관리자)로 남는다.
   const rel = rels.find(r => r.id === sel?.relId);
   // 자관에서 잡은 1:1 얼굴 위치 — 로그 모달(프로필 사진 옵션)에도 같은 값을 넘긴다
   const faceOf = (c?: Character) => (c ? relFaceCrop(rel, sel?.auId, c) : undefined);
@@ -108,10 +109,10 @@ export default function RpPage() {
       // 발화자 목록도 자관에 보이는 순서(왼쪽 먼저)로 — 처음 고른 발화자가 왼쪽 캐릭터가 된다
       const ids = pairSides(rel) ?? rel.members.map(m => m.charId);
       const members = ids.map(id => rpChars.find(c => c.id === id)).filter(Boolean) as Character[];
-      // 관리자도 자캐만 (사용자 확정 — 상대 캐릭터까지 목록에 뜨는 게 싫다). 상대 오너는 권한 받은 캐릭터만
-      return isAdmin ? members.filter(c => c.own) : members.filter(c => !!charGrant(c, user?.id));
+      // 관리자: 옛 역극을 옮길 때 양쪽 캐릭터를 번갈아 선택. 회원: 부여받은 캐릭터만.
+      return isAdmin ? members : members.filter(c => !!charGrant(c, user?.id));
     }
-    return isAdmin ? rpChars.filter(c => c.own) : rpChars.filter(c => !!charGrant(c, user?.id));
+    return isAdmin ? rpChars : rpChars.filter(c => !!charGrant(c, user?.id));
   }, [rel, rpChars, isAdmin, user?.id]);
 
   const [speaker, setSpeaker] = useState<string>('');   // charId | 'desc' (플레이어 발화는 없앴다, v2.0)
