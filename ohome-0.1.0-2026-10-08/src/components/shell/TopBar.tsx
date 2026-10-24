@@ -12,7 +12,7 @@ import { useSections, sectionMenuEntries } from '@/lib/sectionStore';
 import { useCustomLinks, linkEntries } from '@/lib/linkStore';
 import { useSiteSettings } from '@/lib/siteStore';
 import { useAuth } from '@/lib/auth';
-import { currentHomeId, leaveHome } from '@/lib/home';
+import { currentHomeId, leaveHome, chooseAnotherMemberHome } from '@/lib/home';
 import { useMainStore } from '@/lib/mainStore';
 import { useBlobUrl } from '@/lib/blobStore';
 import { refreshPage } from '@/lib/pageRefresh';
@@ -334,6 +334,9 @@ export function TopBar() {
                   <button onClick={() => { setMenuOpen(false); leaveHome(); }}>리스트로</button>
                 )}
               </>
+            )}
+            {!isAdmin && user.homeIds && user.homeIds.length > 1 && (
+              <button onClick={() => { setMenuOpen(false); chooseAnotherMemberHome(user.id); }}>자관 변경</button>
             )}
             <button onClick={() => { setMenuOpen(false); logout(); }}>로그아웃</button>
           </div>
