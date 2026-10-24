@@ -4,8 +4,7 @@
 // 홈 안의 환경설정(테마·메뉴·권한)은 들어가서 바꾼다 — 여기서는 홈 자체와 회원 연결만 다룬다.
 //
 // 회원 연결 — 가입코드로 들어온 회원은 그 자관에 묶이지만, 자관이 지워지면 갈 곳을 잃는다.
-// 어느 자관에도 연결되지 않은 회원(코드 없이 만들어졌거나 자관이 사라진 회원)은 만들기·수정 화면에
-// 목록으로 보여 주고, 골라서 이 자관에 붙일 수 있다.
+// 기존 자관 회원도 새 자관에 추가 연결할 수 있다 — 이전 자관 소속은 유지한다.
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { backend } from '@/lib/backend';
@@ -16,7 +15,7 @@ import { KInput, KCheck } from '@/components/ui/Kit';
 import { useConfirmDelete } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 
-interface MemberRow { id: string; nickname: string; role: 'admin' | 'member'; homeId?: string }
+interface MemberRow { id: string; nickname: string; role: 'admin' | 'member'; homeId?: string; homeIds?: string[] }
 
 /** 오류 문구 — 권한 거부는 거의 늘 「새 규칙(v2.1)을 아직 게시하지 않음」이라 그 길을 바로 알려 준다 */
 const why = (e: unknown) => {
@@ -49,7 +48,7 @@ export function HomeList() {
     try {
       const [hs, ms] = await Promise.all([be.listHomes(), be.listMembers().catch(() => [])]);
       setHomes(hs);
-      setMembers(ms.map(m => ({ id: m.id, nickname: m.nickname, role: m.role, homeId: m.homeId })));
+      setMembers(ms.map(m => ({ id: m.id, nickname: m.nickname, role: m.role, homeId: m.homeId, homeIds: m.homeIds })));
     } catch (e) {
       toast(`자관 목록을 받지 못했습니다 — ${why(e)}`);
       setHomes([]);
@@ -57,10 +56,9 @@ export function HomeList() {
   };
   useEffect(() => { void load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const homeIds = new Set((homes ?? []).map(h => h.id));
   /** 어느 자관에도 연결되지 않은 회원 — 총관리자는 원래 자관에 속하지 않으므로 제외 */
-  const orphans = members.filter(m => m.role !== 'admin' && (!m.homeId || !homeIds.has(m.homeId)));
-  const membersOf = (id: string) => members.filter(m => m.homeId === id);
+  const membersOf = (id: string) => members.filter(m => m.homeId === id || m.homeIds?.includes(id));
+  const eligibleFor = (id: string | null) => members.filter(m => m.role !== 'admin' && (!id || !membersOf(id).some(x => x.id === m.id)));
 
   /** 가입코드 중복 — 코드가 곧 자관을 정하므로 자관마다 달라야 한다 */
   const codeTaken = (code: string, except?: string) =>
@@ -146,15 +144,16 @@ export function HomeList() {
   const toggle = (list: string[], set: (v: string[]) => void, id: string, on: boolean) =>
     set(on ? [...new Set([...list, id])] : list.filter(x => x !== id));
 
-  /** 연결 안 된 회원 고르기 — 만들기·수정 화면 공용 */
-  const orphanPicker = (picked: string[], set: (v: string[]) => void) => (
+  /** 기존 자관 회원도 추가 연결 가능. 이미 이 자관에 속한 회원은 제외. */
+  const orphanPicker = (picked: string[], set: (v: string[]) => void, targetHome: string | null) => (
+
     <div style={{ marginTop: 8 }}>
-      <label className="k-label">연결 안 된 회원 — 골라서 이 자관에 연결</label>
-      {orphans.length === 0 ? (
-        <p className="hint" style={{ margin: '2px 0 0' }}>연결이 필요한 회원이 없습니다. (자관이 지워진 회원·코드 없이 만든 계정이 여기에 뜹니다)</p>
+      <label className="k-label">회원 추가 연결 — 다른 자관의 기존 회원도 선택 가능</label>
+      {eligibleFor(targetHome).length === 0 ? (
+        <p className="hint" style={{ margin: '2px 0 0' }}>추가 연결할 회원이 없습니다.</p>
       ) : (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
-          {orphans.map(m => (
+          {eligibleFor(targetHome).map(m => (
             <KCheck key={m.id} label={m.nickname} checked={picked.includes(m.id)}
               onChange={(on: boolean) => toggle(picked, set, m.id, on)} />
           ))}
@@ -200,7 +199,7 @@ export function HomeList() {
                       </div>
                     </div>
                   )}
-                  {orphanPicker(ePick, setEPick)}
+                  {orphanPicker(ePick, setEPick, h.id)}
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', marginTop: 6 }}>
                     <button className="btn btn-ghost" onClick={() => setEditId(null)}>CANCEL</button>
                     <button className="btn btn-dark" disabled={busy} onClick={saveEdit}>SAVE</button>
@@ -239,7 +238,7 @@ export function HomeList() {
           {newCode.trim() && codeTaken(newCode.trim()) && (
             <p className="setup-err" style={{ margin: 0 }}>이미 다른 자관이 쓰는 가입코드입니다.</p>
           )}
-          {orphanPicker(newPick, setNewPick)}
+          {orphanPicker(newPick, setNewPick, null)}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
             <button className="btn btn-accent" disabled={busy} onClick={create}>＋ 만들기</button>
           </div>

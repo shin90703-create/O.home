@@ -23,6 +23,7 @@ export interface Home {
 }
 
 const PICK_KEY = 'ohome.home.v1';   // 총관리자가 고른 홈 (기기 보관)
+const MEMBER_PICK_PREFIX = 'ohome.member.home.v1.'; // 회원별 마지막 선택 자관
 
 let current: string | null = null;
 
@@ -44,6 +45,21 @@ export function enterHome(id: string) {
 /** 「리스트로」 — 선택을 지우고 리스트(메인)로 */
 export function leaveHome() {
   try { localStorage.removeItem(PICK_KEY); } catch { /* 무시 */ }
+  window.location.href = '/';
+}
+
+/** 회원의 선택 자관 — 로그인 UID별 저장. 부팅 때 참여 자관인지 반드시 확인한다. */
+export function pickedMemberHomeId(uid: string): string | null {
+  try { return localStorage.getItem(MEMBER_PICK_PREFIX + uid); } catch { return null; }
+}
+
+export function enterMemberHome(uid: string, id: string) {
+  try { localStorage.setItem(MEMBER_PICK_PREFIX + uid, id); } catch { /* 무시 */ }
+  window.location.href = '/';
+}
+
+export function chooseAnotherMemberHome(uid: string) {
+  try { localStorage.removeItem(MEMBER_PICK_PREFIX + uid); } catch { /* 무시 */ }
   window.location.href = '/';
 }
 

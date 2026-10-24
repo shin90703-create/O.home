@@ -37,7 +37,7 @@ export function useMembers(): MemberLite[] {
       .then(rows => {
         if (!alive) return;
         setList(rows
-          .filter(r => !home || r.homeId === home)
+          .filter(r => !home || r.homeId === home || r.homeIds?.includes(home))
           .map(r => ({ id: r.id, nickname: r.nickname, role: r.role })));
       })
       .catch(() => { /* 권한·네트워크 문제면 빈 목록 */ });

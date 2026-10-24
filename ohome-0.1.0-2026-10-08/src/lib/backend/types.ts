@@ -27,6 +27,8 @@ export interface BackendUser {
   avatarColor?: string;
   /** 속한 홈(자관) — 가입코드로 정해진다. 총관리자는 없다 (v2.1) */
   homeId?: string;
+  /** 참여 중인 모든 자관 ID — 기존 homeId는 기본 자관으로 보존 */
+  homeIds?: string[];
 }
 
 /** 홈(자관) 한 칸 — homes/{id} (v2.1) */
@@ -73,7 +75,7 @@ export interface Backend {
   /** 가입 회원 목록 — 역극 참여자 선택·회원 관리 화면용.
    *  avatarUrl도 내준다 (v2.0 사용자 제보) — 이미지 정리가 콘텐츠·설정만 훑던 시절, 프로필 사진은
    *  어디에도 참조가 안 잡혀 「아무도 안 쓰는 파일」로 지워졌다. */
-  listMembers(): Promise<{ id: string; nickname: string; role: 'admin' | 'member'; email?: string; avatarUrl?: string; homeId?: string }[]>;
+  listMembers(): Promise<{ id: string; nickname: string; role: 'admin' | 'member'; email?: string; avatarUrl?: string; homeId?: string; homeIds?: string[] }[]>;
 
   /* ---- 홈(자관) (v2.1) ---- */
   /** 이후의 콘텐츠·설정 읽기/쓰기가 향할 홈 — 부팅 때 한 번 정한다. null = 홈 없음(리스트 화면) */
@@ -84,7 +86,7 @@ export interface Backend {
   updateHome(id: string, patch: Partial<Pick<HomeRow, 'name' | 'inviteCode'>>): Promise<void>;
   /** 홈 문서와 그 안의 설정·콘텐츠를 지운다 (회원 프로필·이미지 파일은 남는다) */
   deleteHome(id: string): Promise<void>;
-  /** 회원을 홈에 연결/해제 — 총관리자 전용. 자관이 지워져 갈 곳을 잃은 회원을 다른 자관에 붙일 때 */
+  /** 회원에게 자관을 추가 연결 — 기존 자관을 덮어쓰지 않는다. null은 기존 호환용 연결 초기화(관리자 전용). */
   setMemberHome(uid: string, homeId: string | null): Promise<void>;
 
   /* ---- 목록(콘텐츠) ---- */
