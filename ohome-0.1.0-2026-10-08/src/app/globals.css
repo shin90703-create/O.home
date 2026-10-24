@@ -1306,10 +1306,12 @@ body.edit-on .main-grid.gridlines .wgt{outline-offset:0}
 .tl-say.l{margin-left:19%}
 .tl-say.r{margin-right:19%}
 .timeline.multi .tl-say.l{margin-left:0;max-width:62%} /* 다인: 왼쪽 정렬 */
-/* 캐릭터 이름의 고유색은 유지하고 진한 슬레이트 외곽선으로 대비만 보완한다.
-   paint-order로 테두리를 글자 뒤에 그려 원래 글자색과 획을 보존한다. */
+/* 캐릭터 고유색은 그대로 유지하고, 글씨 아래에 부드러운 밝은 빛 번짐만 더한다.
+   검은색 계열 캐릭터도 어두운 타임라인 배경에서 식별되도록 여러 단계의 희미한 빛을 겹친다. */
 .tl-say .who{font-size:calc(10px*var(--fs,1));letter-spacing:.1em;color:rgb(var(--cc));font-weight:700;margin-bottom:3px;
-  -webkit-text-stroke:1.3px #555b66;paint-order:stroke fill}
+  text-shadow:0 0 2px rgba(240,242,248,.95),
+    0 0 5px rgba(221,226,236,.80),
+    0 0 10px rgba(203,211,225,.42)}
 .tl-say .bub{display:inline-block;padding:8px 13px;border-radius:12px;font-size:calc(12px*var(--fs,1));line-height:1.6;white-space:pre-line;
   background:rgba(var(--cc),.10);border:1px solid rgba(var(--cc),.22);color:var(--ink)}
 .tl-say.l .bub{border-bottom-left-radius:3px}
