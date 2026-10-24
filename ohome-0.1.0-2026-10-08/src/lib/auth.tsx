@@ -15,6 +15,8 @@ export interface User {
   avatarUrl?: string;    // 프로필 이미지 (파일 참조 또는 URL)
   avatarColor?: string;  // 단색 아바타 (이미지 없을 때)
   email?: string;
+  homeId?: string;
+  homeIds?: string[];
 }
 
 type Result = { ok: boolean; error?: string };
