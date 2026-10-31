@@ -7,6 +7,11 @@ import { adjust, hexToHsl, hslToHex, withAlpha } from './color';
 export type ThemeMode = 'light' | 'dark' | 'point' | 'custom';
 export type PointTone = 'dark' | 'light';
 
+/** 캐릭터 소개 본문의 기본 글씨색: 카드가 어두우면 밝게, 밝으면 기존 진회색. */
+export function characterTextColorForBg(bg?: string): string {
+  return hexToHsl(bg ?? '#fbfbfc').l < 0.55 ? '#dedbd6' : '#3a3f47';
+}
+
 /** 환경설정에서 항목별로 제어되는 테마 변수 (5.1 상세 설정 항목) */
 export interface ThemeVars {
   // 배경 그라데이션 (시작색 → 끝색)
@@ -42,6 +47,8 @@ export interface ThemeVars {
   // 스티커 메모·메모 목록 및 타임라인 본문의 색 — 기존 저장된 테마에는 선택 사항
   memoNoteFg?: string; memoListFg?: string;
   timelineDescFg?: string; timelineBubbleFg?: string;
+  // 캐릭터 상세 소개·탭 본문. 지정하지 않으면 카드 배경 명도에 따라 자동 대비
+  characterBodyFg?: string;
   // 캐릭터 탭 리스트 (v1.9 사용자 피드백) — 좌측 아이콘 탭: 배경·글씨·선택 배경·선택 글씨
   tabBg?: string; tabFg?: string; tabOnBg?: string; tabOnFg?: string;
   // 스위치 탭 (v2.0 사용자 요청) — 게시판 말머리·갤러리 보기 전환 등. 고른 쪽은 진한 버튼색을 그대로 따라가고
@@ -259,6 +266,7 @@ export function themeToCssVars(t: ThemeVars): Record<string, string> {
     '--timeline-desc-fg': t.timelineDescFg ?? '#3a3f47',
     // 사용자가 말풍선색을 따로 정하지 않았다면 기존 카드 글씨색을 사용
     '--timeline-bubble-fg': t.timelineBubbleFg ?? 'var(--ink)',
+    '--character-body-fg': t.characterBodyFg ?? characterTextColorForBg(t.cardBg),
     // 이미지 편집(크롭) 배경 (v1.9)
     '--crop-bg': t.cropBg ?? '#2c313a',
     // 입력 포커스 (v1.9) — 테두리색 + 링(글로우: 반투명 번짐 / 라인: 선명한 테두리 / 없음)
