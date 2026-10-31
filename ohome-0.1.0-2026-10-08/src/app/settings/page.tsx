@@ -437,6 +437,26 @@ function DesignPane() {
         </div>
       </div>
 
+      {/* 본문 색은 기존 테마 저장/SAVE 흐름 사용 — 자관마다 개별 저장 */}
+      <div className="set-row">
+        <div className="l"><b>메모 본문 글씨</b><small>포스트잇 안의 내용 / 메모 목록과 메인 MEMO 위젯의 내용</small></div>
+        <div className="cp-group">
+          <CP label="포스트잇" k="memoNoteFg" def="#3c3a33" />
+          <CP label="목록·위젯" k="memoListFg" def="#33373e" />
+        </div>
+      </div>
+      <div className="set-row">
+        <div className="l"><b>타임라인 본문 글씨</b><small>사건 설명과 캐릭터 대사 말풍선 — 이름의 캐릭터 고유색은 그대로 둡니다</small></div>
+        <div className="cp-group">
+          <CP label="설명" k="timelineDescFg" def="#3a3f47" />
+          <CP label="말풍선" k="timelineBubbleFg" def={state.vars.cardFg ?? '#1d2025'} />
+          {state.vars.timelineBubbleFg && (
+            <button className="btn btn-ghost" style={{ padding: '4px 9px', fontSize: 10.5 }}
+              onClick={() => setVar('timelineBubbleFg', undefined)}>카드 글씨 따라가기</button>
+          )}
+        </div>
+      </div>
+
       {/* 스티커 메모 보드 (v1.9 사용자 요청) — 라이트 모드에서 배치 판이 안 보이던 문제 */}
       <div className="set-row">
         <div className="l"><b>스티커 메모 보드</b><small>메모장 배치 판과 메인 미니보드 위젯의 배경</small></div>
