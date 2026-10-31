@@ -43,6 +43,9 @@ export interface ThemeVars {
   // 스티커 메모 보드 (v1.9 사용자 피드백) — 메모장 배치 판·메인 미니보드 배경/테두리
   // (기존 고정 rgba가 라이트 모드에서 안 보이던 문제)
   memoBoard?: string; memoBoardBd?: string;
+  // 메모 본문(포스트잇·목록/메인 위젯)과 자관 타임라인 본문 색상
+  memoNoteFg?: string; memoListFg?: string;
+  timelineDescFg?: string; timelineBubbleFg?: string;
   // 캐릭터 탭 리스트 (v1.9 사용자 피드백) — 좌측 아이콘 탭: 배경·글씨·선택 배경·선택 글씨
   tabBg?: string; tabFg?: string; tabOnBg?: string; tabOnFg?: string;
   // 스위치 탭 (v2.0 사용자 요청) — 게시판 말머리·갤러리 보기 전환 등. 고른 쪽은 진한 버튼색을 그대로 따라가고
@@ -271,6 +274,11 @@ export function themeToCssVars(t: ThemeVars): Record<string, string> {
     // 스티커 메모 보드 (v1.9)
     '--memo-board': t.memoBoard ?? '#2a2f37',
     '--memo-board-bd': t.memoBoardBd ?? '#3a404b',
+    // 색을 따로 지정하지 않은 기존 자관은 종전 색상 그대로. 말풍선은 카드 글씨색을 계속 상속.
+    '--memo-note-fg': t.memoNoteFg ?? '#3c3a33',
+    '--memo-list-fg': t.memoListFg ?? '#33373e',
+    '--timeline-desc-fg': t.timelineDescFg ?? '#3a3f47',
+    '--timeline-bubble-fg': t.timelineBubbleFg ?? 'var(--ink)',
     // 이미지 편집(크롭) 배경 (v1.9)
     '--crop-bg': t.cropBg ?? '#2c313a',
     // 입력 포커스 (v1.9) — 테두리색 + 링(글로우: 반투명 번짐 / 라인: 선명한 테두리 / 없음)
