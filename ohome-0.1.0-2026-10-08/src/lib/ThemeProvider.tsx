@@ -117,6 +117,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         rpBtnBg: site.rpBtnBg, rpBtnFg: site.rpBtnFg,
         rpBtnBd: site.rpBtnBd, rpBtnHover: site.rpBtnHover,
         rpStatusBg: site.rpStatusBg, rpStatusFg: site.rpStatusFg, rpStatusBd: site.rpStatusBd,
+        // 자관 상세에서 임시 테마 컬러를 써도 별도로 지정한 메모·타임라인 글씨색은 보존
+        memoNoteFg: site.memoNoteFg, memoListFg: site.memoListFg,
+        timelineDescFg: site.timelineDescFg, timelineBubbleFg: site.timelineBubbleFg,
       }
       : site);
     // 페이지 배경 지정 (v2.0) — 팔레트를 적용한 뒤에 배경 세 값만 덮어쓴다.
