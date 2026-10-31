@@ -1118,7 +1118,7 @@ body.edit-on .main-grid.gridlines .wgt{outline-offset:0}
 .tl-say.l{margin-left:19%}
 .tl-say.r{margin-right:19%}
 .timeline.multi .tl-say.l{margin-left:0;max-width:62%} /* 다인: 왼쪽 정렬 */
-.tl-say .who{font-size:calc(10px*var(--fs,1));letter-spacing:.1em;color:rgb(var(--cc));font-weight:700;margin-bottom:3px}
+.tl-say .who{font-size:calc(10px*var(--fs,1));letter-spacing:.1em;color:rgb(var(--cc));font-weight:700;margin-bottom:3px;text-shadow:none;-webkit-text-stroke:0}
 .tl-say .bub{display:inline-block;padding:8px 13px;border-radius:12px;font-size:calc(12px*var(--fs,1));line-height:1.6;white-space:pre-line;
   background:rgba(var(--cc),.10);border:1px solid rgba(var(--cc),.22);color:var(--timeline-bubble-fg,var(--ink))}
 .tl-say.l .bub{border-bottom-left-radius:3px}
