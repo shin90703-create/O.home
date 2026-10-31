@@ -5,7 +5,7 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth, inviteCode, setInviteCode } from '@/lib/auth';
 import { useMembers } from '@/lib/members';
 import { useTheme } from '@/lib/ThemeProvider';
-import { ThemeVars } from '@/lib/theme';
+import { ThemeVars, characterTextColorForBg } from '@/lib/theme';
 import { ColorField } from '@/components/ui/ColorField';
 import { KStep, KToggle, KInput, LiveInput, KTextarea, KSelect, KCheck, Pager } from '@/components/ui/Kit';
 import { DragList } from '@/components/ui/DragList';
@@ -450,6 +450,18 @@ function DesignPane() {
           {state.vars.timelineBubbleFg && (
             <button className="btn btn-ghost" style={{ padding: '4px 9px', fontSize: 10.5 }}
               onClick={() => setVar('timelineBubbleFg', undefined)}>카드 글씨 따라가기</button>
+          )}
+        </div>
+      </div>
+
+      {/* 프로필 소개·추가 탭 본문은 카드색과 별도로 지정 가능. 미지정이면 배경에 따라 자동 대비 */}
+      <div className="set-row">
+        <div className="l"><b>캐릭터 프로필 본문</b><small>캐릭터 상세 오른쪽 소개글과 추가 탭의 본문 — 카드 배경에 맞춘 자동 색상 지원</small></div>
+        <div className="cp-group">
+          <CP label="글씨" k="characterBodyFg" def={characterTextColorForBg(state.vars.cardBg)} />
+          {state.vars.characterBodyFg && (
+            <button className="btn btn-ghost" style={{ padding: '4px 9px', fontSize: 10.5 }}
+              onClick={() => setVar('characterBodyFg', undefined)}>자동 대비</button>
           )}
         </div>
       </div>
