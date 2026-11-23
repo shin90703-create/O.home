@@ -222,7 +222,7 @@ body{background:radial-gradient(ellipse at 65% 0%,#27313c,#0d1118 57%)}
 .survivor-tile .survivor-fallback svg{width:100%;height:100%;max-height:530px}
 .survivor-tile .tile-shade{position:absolute;inset:0;background:linear-gradient(180deg,#0c172000 48%,#07101bd6 100%);pointer-events:none}
 .survivor-tile .tile-id{position:absolute;top:23px;left:19px;font:10px Consolas;letter-spacing:.24em;color:#e0e4e9;z-index:2;text-shadow:0 2px 8px #000}
-.survivor-tile .tile-name-vertical{position:absolute;right:13px;top:14%;height:70%;writing-mode:vertical-rl;transform:rotate(180deg);font:italic 39px 'Segoe Print','Brush Script MT','Apple Chancery',cursive;letter-spacing:.06em;color:#fff;text-shadow:0 1px 16px #050b12;z-index:3;max-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.survivor-tile .tile-name-vertical{position:absolute;right:13px;top:14%;height:70%;writing-mode:vertical-rl;text-orientation:sideways;transform:none;font:italic 39px 'Segoe Print','Brush Script MT','Apple Chancery',cursive;letter-spacing:.06em;color:#fff;text-shadow:0 1px 16px #050b12;z-index:3;max-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .survivor-tile .tile-footer{position:absolute;left:18px;right:18px;bottom:20px;z-index:3;display:grid;gap:7px;text-shadow:0 2px 8px #000}
 .survivor-tile .tile-footer .over{color:#d4dce3}
 .survivor-tile .tile-footer h3{font:400 24px Georgia,'Batang',serif;color:#f8f8f7;letter-spacing:.08em}
@@ -564,8 +564,8 @@ const POOL=[
 ];
 const stamp=()=>new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
 const blank=()=>({version:3,users:{
- A:{name:'생존자 A',zone:'B',location:'sewer',hp:86,sp:78,wounds:0,lastRest:0,equipment:{weapon:'knife',armor:null,tool:null},inv:{can:3,water:3,rice:2,cloth:3,alcohol:2,bandage:1,metal:3,tape:2,battery:1,knife:1}},
- B:{name:'생존자 B',zone:'B',location:'sewer',hp:93,sp:86,wounds:0,lastRest:0,equipment:{weapon:null,armor:null,tool:null},inv:{can:1,water:2,rice:1,cloth:1,alcohol:1,bandage:2,metal:1,tape:1}}
+ A:{name:'생존자 A',zone:'B',location:'sewer',hp:86,sp:78,wounds:0,lastRest:0,equipment:{weapon:'knife',armor:null,tool:null},inv:{can:1,water:2,rice:1,cloth:2,alcohol:1,bandage:1,metal:1,tape:1,battery:1,knife:1}},
+ B:{name:'생존자 B',zone:'B',location:'sewer',hp:93,sp:86,wounds:0,lastRest:0,equipment:{weapon:null,armor:null,tool:null},inv:{can:1,water:2,rice:1,cloth:2,alcohol:1,bandage:1,metal:1,tape:1,battery:1,knife:1}}
  },base:{level:0,facilities:{}},story:{chapter:1,completed:0},active:'A',refreshAt:Date.now()+3*3600000,generation:0,sites:[],session:null,
  messages:[{id:1,channel:'main',from:'sys',text:'[CH.01] B-03 단거리 무전망 연결',time:stamp()}],
  logs:[{time:stamp(),text:'챕터 1 개시 · B-03 배수로 은신처 발견'}]});
