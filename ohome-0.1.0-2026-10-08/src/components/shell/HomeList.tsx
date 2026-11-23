@@ -98,6 +98,25 @@ export function HomeList() {
     setBusy(false);
   };
 
+  // ASHLINE은 기존 자관과 분리된 고정 홈을 사용한다.
+  const openAshline = async () => {
+    const be = backend();
+    if (!be || busy) return;
+    setBusy(true);
+    try {
+      const id = 'ashline-chapter01';
+      if (!(homes ?? []).some(h => h.id === id)) {
+        await be.createHome({ id, name: '애시라인', inviteCode: randomInviteCode(), createdAt: Date.now() });
+      }
+      // 선택된 홈을 부팅 때 읽은 뒤 /ashline을 표시한다.
+      try { localStorage.setItem('ohome.home.v1', id); } catch { /* 무시 */ }
+      window.location.href = '/ashline';
+    } catch (e) {
+      toast(`애시라인에 들어가지 못했습니다 — ${why(e)}`);
+      setBusy(false);
+    }
+  };
+
   const startEdit = (h: HomeRow) => { setEditId(h.id); setEName(h.name); setECode(h.inviteCode); setEPick([]); };
   const saveEdit = async () => {
     const be = backend();
@@ -181,7 +200,7 @@ export function HomeList() {
         )}
 
         <div style={{ display: 'grid', gap: 10 }}>
-          {homes?.map(h => (
+          {homes?.filter(h => h.id !== 'ashline-chapter01').map(h => (
             <div key={h.id} className="panel" style={{ padding: '14px 16px', boxShadow: 'none', border: '1px solid var(--line)' }}>
               {editId === h.id ? (
                 <div style={{ display: 'grid', gap: 8 }}>
@@ -226,6 +245,14 @@ export function HomeList() {
               )}
             </div>
           ))}
+        </div>
+
+        <div className="panel" style={{ marginTop: 10, padding: '14px 16px', border: '1px solid var(--line)', boxShadow: 'none', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <b style={{ fontSize: 15, color: 'var(--ink)' }}>애시라인 · ASHLINE</b>
+            <div style={{ fontSize: 11.5, color: 'var(--faint)', marginTop: 4 }}>별도 기록 공간 · 기존 자관과 분리</div>
+          </div>
+          <button className="btn btn-dark" disabled={busy || homes === null} onClick={openAshline}>애시라인 들어가기 →</button>
         </div>
 
         <div className="setup-sep" />
