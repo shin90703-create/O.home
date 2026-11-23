@@ -216,6 +216,23 @@ export default function AshlinePage() {
       ref={frame}
       src="/ashline/index.html"
       title="ASHLINE - 끝에서 시작한 기록"
+      onLoad={() => {
+        // ASHLINE is same-origin; restore independent scrolling for the left navigation
+        // if the embedded application's own fixed-height styles clipped it.
+        const doc = frame.current?.contentDocument;
+        if (!doc || doc.getElementById('ohome-ashline-sidebar-scroll')) return;
+        const style = doc.createElement('style');
+        style.id = 'ohome-ashline-sidebar-scroll';
+        style.textContent = `
+          .sidebar, #sidebar, .side-nav, .sidebar-nav {
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+            min-height: 0 !important;
+            scrollbar-width: thin;
+          }
+        `;
+        doc.head.appendChild(style);
+      }}
       style={{ display: 'block', width: '100%', height: '100%', minHeight: 0, border: 0 }}
     />
     {/* ASHLINE's existing upper-right radio indicator is replaced by an account control.
