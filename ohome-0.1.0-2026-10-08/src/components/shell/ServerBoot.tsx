@@ -11,7 +11,7 @@
 import React, { useEffect, useState } from 'react';
 import { initSupabase } from '@/lib/supabase';
 import { primeSettings } from '@/lib/settingStore';
-import { pickedHomeId, pickedMemberHomeId, setCurrentHomeId } from '@/lib/home';
+import { pickedHomeId, pickedMemberHomeId, memberWantsHomePicker, setCurrentHomeId } from '@/lib/home';
 
 export function ServerBoot({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -34,7 +34,7 @@ export function ServerBoot({ children }: { children: React.ReactNode }) {
               const ids = [...new Set([...(u.homeId ? [u.homeId] : []), ...(u.homeIds ?? [])])];
               const chosen = pickedMemberHomeId(u.id);
               // 여러 자관에 속하면 선택 화면을 먼저 보여준다.
-              home = ids.length === 1 ? ids[0] : (chosen && ids.includes(chosen) ? chosen : null);
+              home = memberWantsHomePicker(u.id) ? null : (ids.length === 1 ? ids[0] : (chosen && ids.includes(chosen) ? chosen : null));
               if (home) {
                 const available = await be.listHomes();
                 if (!available.some(h => h.id === home)) home = null;
