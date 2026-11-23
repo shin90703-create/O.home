@@ -229,9 +229,9 @@ export default function AshlinePage() {
             .survivor-tile .tile-name-vertical {
               top:auto !important;bottom:22% !important;right:20px !important;
               height:auto !important;max-height:none !important;
-              writing-mode:horizontal-tb !important;
-              transform:rotate(90deg) translateY(-100%) !important;
-              transform-origin:top right !important;
+              writing-mode:vertical-rl !important;
+              text-orientation:sideways !important;
+              transform:none !important;
               font-size:0 !important;overflow:visible !important;
               width:max-content !important;white-space:nowrap !important;
             }
