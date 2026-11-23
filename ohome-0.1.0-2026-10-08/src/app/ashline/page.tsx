@@ -230,8 +230,35 @@ export default function AshlinePage() {
             min-height: 0 !important;
             scrollbar-width: thin;
           }
+          /* Survivor card: handwritten romanized name only, near the bottom-right. */
+          .survivor-tile .tile-name-vertical {
+            top: auto !important;
+            bottom: 20% !important;
+            height: auto !important;
+            max-height: 46% !important;
+            writing-mode: vertical-rl !important;
+            text-orientation: sideways !important;
+            transform: none !important;
+          }
         `;
         doc.head.appendChild(style);
+        // The game re-renders cards when profiles or pages change. Keep the
+        // sideways title in Latin script while retaining the Korean footer name.
+        const setRomanNames = () => {
+          doc.querySelectorAll<HTMLElement>('.survivor-tile').forEach(card => {
+            const label = card.querySelector<HTMLElement>('.tile-name-vertical');
+            if (!label) return;
+            const slot = card.getAttribute('data-id') || card.querySelector('.tile-id')?.textContent?.trim().slice(-1) || 'A';
+            const roman = card.querySelector('.tile-footer small')?.textContent?.trim() || '';
+            const customRoman = roman && roman !== 'UNREGISTERED SURVIVOR' && /^[\\x20-\\x7E]+$/.test(roman) ? roman : '';
+            const preferred = customRoman || `SURVIVOR ${slot}`;
+            if (label.textContent !== preferred) label.textContent = preferred;
+          });
+        };
+        setRomanNames();
+        const observer = new MutationObserver(setRomanNames);
+        observer.observe(doc.body, { childList: true, subtree: true });
+        frame.current?.addEventListener('load', () => observer.disconnect(), { once: true });
       }}
       style={{ display: 'block', width: '100%', height: '100%', minHeight: 0, border: 0 }}
     />
