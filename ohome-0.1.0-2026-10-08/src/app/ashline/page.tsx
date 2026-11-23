@@ -31,7 +31,7 @@ const MAX_STATE_CHARS = 700_000;
 const MAX_UPLOAD = 4 * 1024 * 1024;
 
 export default function AshlinePage() {
-  const { user, ready, mock, logout, isAdmin } = useAuth();
+  const { user, ready, mock } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const frameReady = useRef(false);
@@ -227,10 +227,7 @@ export default function AshlinePage() {
           <span>{user.nickname}</span><span style={{ fontSize: 10 }}>▴</span>
         </button>
         {accountOpen && <div role="menu" style={{ position: 'absolute', right: 0, bottom: 'calc(100% + 8px)', minWidth: 156, background: '#192430', border: '1px solid #43515e', boxShadow: '0 9px 30px #0009', borderRadius: 8, padding: 5 }}>
-          <a role="menuitem" href="/mypage" style={{ display: 'block', padding: '9px 12px' }}>정보수정</a>
-          {isAdmin && <a role="menuitem" href="/settings" style={{ display: 'block', padding: '9px 12px' }}>환경설정</a>}
-          {isAdmin && <button role="menuitem" onClick={leaveHome} style={{ width: '100%', padding: '9px 12px', textAlign: 'left' }}>자관 목록으로</button>}
-          <button role="menuitem" onClick={() => logout()} style={{ width: '100%', padding: '9px 12px', textAlign: 'left' }}>로그아웃</button>
+          <button role="menuitem" onClick={leaveHome} style={{ width: '100%', padding: '9px 12px', textAlign: 'left' }}>자관 목록으로</button>
         </div>}
       </div>
     </footer>
