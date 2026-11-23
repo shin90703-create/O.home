@@ -9,7 +9,7 @@ import { getApp } from 'firebase/app';
 import { doc, getDoc, getFirestore, onSnapshot, runTransaction } from 'firebase/firestore';
 import { useAuth } from '@/lib/auth';
 import { backend, isServerMode } from '@/lib/backend';
-import { currentHomeId } from '@/lib/home';
+import { currentHomeId, leaveHome } from '@/lib/home';
 import { serverConfig } from '@/lib/serverConfig';
 
 type Slot = 'A' | 'B';
@@ -31,7 +31,8 @@ const MAX_STATE_CHARS = 700_000;
 const MAX_UPLOAD = 4 * 1024 * 1024;
 
 export default function AshlinePage() {
-  const { user, ready, mock } = useAuth();
+  const { user, ready, mock, logout, isAdmin } = useAuth();
+  const [accountOpen, setAccountOpen] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const frameReady = useRef(false);
   const slot = useRef<Slot | null>(null);
@@ -210,12 +211,28 @@ export default function AshlinePage() {
       <a href="/" style={{ color: '#e9edf1' }}>O.HOME으로 돌아가기</a>
     </div>;
   }
-  return <section style={{ margin: '-12px', background: '#090e15', minHeight: 'calc(100dvh - 90px)' }}>
+  return <section style={{ background: '#090e15', height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', color: '#d4dce6' }}>
     <iframe
       ref={frame}
       src="/ashline/index.html"
       title="ASHLINE - 끝에서 시작한 기록"
-      style={{ display: 'block', width: '100%', height: 'calc(100dvh - 80px)', minHeight: 680, border: 0 }}
+      style={{ display: 'block', width: '100%', flex: 1, minHeight: 0, border: 0 }}
     />
+    <footer style={{ position: 'relative', zIndex: 10, flexShrink: 0, height: 46, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '0 20px', background: '#111923', borderTop: '1px solid #35414d', fontSize: 12 }}>
+      <span style={{ marginRight: 'auto', letterSpacing: '.12em', fontSize: 10, color: '#8799a9' }}>ASHLINE · O.HOME ACCOUNT</span>
+      <div style={{ position: 'relative' }}>
+        <button type="button" aria-expanded={accountOpen} aria-haspopup="menu" onClick={() => setAccountOpen(v => !v)}
+          style={{ display: 'flex', alignItems: 'center', gap: 9, color: '#e2e9f1', padding: '5px 8px' }}>
+          <span aria-hidden style={{ width: 22, height: 22, borderRadius: '50%', background: user.avatarColor || '#536171', border: '1px solid #73808d' }} />
+          <span>{user.nickname}</span><span style={{ fontSize: 10 }}>▴</span>
+        </button>
+        {accountOpen && <div role="menu" style={{ position: 'absolute', right: 0, bottom: 'calc(100% + 8px)', minWidth: 156, background: '#192430', border: '1px solid #43515e', boxShadow: '0 9px 30px #0009', borderRadius: 8, padding: 5 }}>
+          <a role="menuitem" href="/mypage" style={{ display: 'block', padding: '9px 12px' }}>정보수정</a>
+          {isAdmin && <a role="menuitem" href="/settings" style={{ display: 'block', padding: '9px 12px' }}>환경설정</a>}
+          {isAdmin && <button role="menuitem" onClick={leaveHome} style={{ width: '100%', padding: '9px 12px', textAlign: 'left' }}>자관 목록으로</button>}
+          <button role="menuitem" onClick={() => logout()} style={{ width: '100%', padding: '9px 12px', textAlign: 'left' }}>로그아웃</button>
+        </div>}
+      </div>
+    </footer>
   </section>;
 }
