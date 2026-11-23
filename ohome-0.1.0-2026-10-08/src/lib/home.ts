@@ -55,7 +55,7 @@ export function pickedMemberHomeId(uid: string): string | null {
 
 export function enterMemberHome(uid: string, id: string) {
   try { localStorage.setItem(MEMBER_PICK_PREFIX + uid, id); } catch { /* 무시 */ }
-  window.location.href = '/';
+  window.location.href = id === 'ashline-chapter01' ? '/ashline' : '/';
 }
 
 export function chooseAnotherMemberHome(uid: string) {
