@@ -33,6 +33,8 @@ const MAX_UPLOAD = 4 * 1024 * 1024;
 export default function AshlinePage() {
   const { user, ready, mock } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const resetProgress = useRef<(() => Promise<void>) | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const frameReady = useRef(false);
   const slot = useRef<Slot | null>(null);
@@ -64,6 +66,31 @@ export default function AshlinePage() {
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
     const origin = window.location.origin;
+    const db = cfg.databaseId && cfg.databaseId !== '(default)' ? getFirestore(getApp(), cfg.databaseId) : getFirestore(getApp());
+    const worldRef = doc(db, 'homes', home, 'ashline_state', 'chapter01');
+    let resetPending = false;
+    resetProgress.current = async () => {
+      const player = slot.current;
+      if (!player || !latest.current || resetPending) return;
+      if (!window.confirm('이 자관의 애쉬라인을 처음부터 시작할까?\n\n두 생존자의 시설·소지품·탐사·무전과 프로필·역극·갤러리·메모·음악 목록까지 모두 초기화돼. 두 계정의 생존자 자리는 유지돼. 되돌릴 수 없어.')) return;
+      resetPending = true;
+      setResetting(true);
+      try {
+        await runTransaction(db, async tx => {
+          const snap = await tx.get(worldRef);
+          const world = snap.data() as World | undefined;
+          if (!world || world.slots[player] !== uid) throw new Error('현재 생존자 계정으로 다시 접속해 줘.');
+          tx.update(worldRef, { payload: null, revision: world.revision + 1, updatedAt: Date.now() });
+        });
+        if (!disposed) window.location.reload();
+      } catch (error) {
+        if (!disposed) {
+          resetPending = false;
+          setResetting(false);
+          window.alert('초기화하지 못했어. ' + (error instanceof Error ? error.message : '연결을 확인해 줘.'));
+        }
+      }
+    };
     const send = (payload: Record<string, unknown>) => {
       frame.current?.contentWindow?.postMessage(payload, origin);
     };
@@ -85,7 +112,7 @@ export default function AshlinePage() {
         pushInitial();
         return;
       }
-      if (!slot.current) return;
+      if (!slot.current || resetPending) return;
       if (msg.type === 'ASHLINE_UPLOAD') {
         const requestId = msg.requestId;
         if (!requestId) return;
@@ -174,6 +201,11 @@ export default function AshlinePage() {
           if (!snap.exists() || disposed) return;
           const world = snap.data() as World;
           latest.current = world;
+          if (resetPending) return;
+          if (frame.current?.dataset.initialized && world.payload === null && world.revision > rev.current && !snap.metadata.hasPendingWrites) {
+            window.location.reload();
+            return;
+          }
           if (!frameReady.current) return;
           // Always initialize the document before delivering incremental updates.
           if (!frame.current?.dataset.initialized) {
@@ -193,6 +225,7 @@ export default function AshlinePage() {
 
     return () => {
       disposed = true;
+      resetProgress.current = null;
       unsubscribe?.();
       window.removeEventListener('message', handleMessage);
     };
@@ -281,6 +314,7 @@ export default function AshlinePage() {
       {accountOpen && <div role="menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 10px)', minWidth: 166, borderRadius: 7, background: '#14232f', border: '1px solid #435766', boxShadow: '0 12px 28px #000a', padding: 5, color: '#e0e9ef' }}>
         <div style={{ padding: '6px 10px 8px', color: '#8da5b2', fontSize: 11 }}>{user.nickname}</div>
         <button role="menuitem" type="button" onClick={leaveHome} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px', color: '#e0e9ef', fontSize: 12 }}>자관 목록으로</button>
+        <button role="menuitem" type="button" disabled={resetting || !slot.current} onClick={() => void resetProgress.current?.()} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px', color: '#ffc0b8', fontSize: 12 }}>{resetting ? '초기화 중…' : '진행상황 초기화'}</button>
       </div>}
     </div>
   </section>;
