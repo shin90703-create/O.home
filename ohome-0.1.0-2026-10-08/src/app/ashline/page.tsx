@@ -227,7 +227,7 @@ export default function AshlinePage() {
           style.textContent = `
             .sidebar {overflow-y:auto !important;min-height:0 !important;overscroll-behavior:contain;scrollbar-width:thin}
             .survivor-tile .tile-name-vertical {
-              top:auto !important;bottom:22% !important;
+              top:auto !important;bottom:15% !important;
               left:auto !important;right:0 !important;
               width:42px !important;height:auto !important;max-height:none !important;
               writing-mode:vertical-rl !important;
