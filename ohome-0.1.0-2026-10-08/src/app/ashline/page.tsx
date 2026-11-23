@@ -114,7 +114,7 @@ export default function AshlinePage() {
       writeInProgress.current = true;
       try {
         const app = getApp();
-        const db = getFirestore(app, cfg.databaseId && cfg.databaseId !== '(default)' ? cfg.databaseId : undefined);
+        const db = (cfg.databaseId && cfg.databaseId !== '(default)' ? getFirestore(app, cfg.databaseId) : getFirestore(app));
         const ref = doc(db, 'homes', home, 'ashline_state', 'chapter01');
         const nextRevision = await runTransaction(db, async tx => {
           const snap = await tx.get(ref);
@@ -130,7 +130,7 @@ export default function AshlinePage() {
       } catch (err) {
         try {
           const cfgDb = cfg.databaseId && cfg.databaseId !== '(default)' ? cfg.databaseId : undefined;
-          const db = getFirestore(getApp(), cfgDb);
+          const db = (cfgDb ? getFirestore(getApp(), cfgDb) : getFirestore(getApp()));
           const snap = await getDoc(doc(db, 'homes', home, 'ashline_state', 'chapter01'));
           if (snap.exists() && !disposed) {
             const next = snap.data() as World;
@@ -148,7 +148,7 @@ export default function AshlinePage() {
     void (async () => {
       try {
         const app = getApp();
-        const db = getFirestore(app, cfg.databaseId && cfg.databaseId !== '(default)' ? cfg.databaseId : undefined);
+        const db = (cfg.databaseId && cfg.databaseId !== '(default)' ? getFirestore(app, cfg.databaseId) : getFirestore(app));
         const ref = doc(db, 'homes', home, 'ashline_state', 'chapter01');
         // The first two distinct O.HOME members occupy A and B; no client-side account toggle.
         const joined = await runTransaction(db, async tx => {
