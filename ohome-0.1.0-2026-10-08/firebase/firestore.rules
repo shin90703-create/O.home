@@ -106,6 +106,42 @@ service cloud.firestore {
         allow write: if isAdmin();
       }
 
+      // ASHLINE: only members of the selected O.HOME home can open the shared world.
+      // The two player slots are bound to Firebase Authentication UIDs.
+      match /ashline_state/{docId} {
+        // Before the second player joins, home members may claim the free slot.
+        // After both slots are filled, only A/B (and the O.HOME owner) may read.
+        allow read: if docId == 'chapter01' && inHome(homeId)
+          && (isAdmin() || resource.data.slots.A == request.auth.uid
+              || resource.data.slots.B == request.auth.uid || resource.data.slots.B == null);
+
+        allow create: if docId == 'chapter01' && inHome(homeId)
+          && request.resource.data.keys().hasOnly(['slots', 'revision', 'payload', 'updatedAt'])
+          && request.resource.data.slots.A == request.auth.uid
+          && request.resource.data.slots.B == null
+          && request.resource.data.revision == 0
+          && request.resource.data.payload == null;
+
+        allow update: if docId == 'chapter01' && inHome(homeId)
+          && request.resource.data.keys().hasOnly(['slots', 'revision', 'payload', 'updatedAt'])
+          && request.resource.data.slots.A == resource.data.slots.A
+          && (
+            // Assigned A/B member writes a newer revision, without taking over a slot.
+            ((request.auth.uid == resource.data.slots.A || request.auth.uid == resource.data.slots.B)
+              && request.resource.data.slots == resource.data.slots
+              && request.resource.data.revision == resource.data.revision + 1)
+            ||
+            // Another member may claim the unassigned B slot, but cannot change game state.
+            (resource.data.slots.B == null
+              && request.auth.uid != resource.data.slots.A
+              && request.resource.data.slots.B == request.auth.uid
+              && request.resource.data.revision == resource.data.revision
+              && request.resource.data.payload == resource.data.payload)
+          );
+
+        allow delete: if isAdmin();
+      }
+
       // 홈 콘텐츠
       match /{coll}/{docId} {
         // 읽기: 홈 회원이면서 — 전체공개 / 멤버공개 / 내가 쓴 것 / 총관리자
