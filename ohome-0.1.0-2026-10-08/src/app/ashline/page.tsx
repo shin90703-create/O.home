@@ -228,7 +228,7 @@ export default function AshlinePage() {
             .sidebar {overflow-y:auto !important;min-height:0 !important;overscroll-behavior:contain;scrollbar-width:thin}
             .survivor-tile .tile-name-vertical {
               top:auto !important;bottom:22% !important;
-              left:20px !important;right:auto !important;
+              left:auto !important;right:18px !important;
               height:auto !important;max-height:none !important;
               writing-mode:vertical-rl !important;
               text-orientation:sideways !important;
@@ -240,7 +240,7 @@ export default function AshlinePage() {
             .survivor-tile .tile-name-vertical::after {
               content:attr(data-roman-name);
               font:italic 36px 'Segoe Print','Brush Script MT','Apple Chancery',cursive;
-              color:#fff;letter-spacing:.04em;text-shadow:0 1px 16px #050b12;
+              color:#fff;opacity:.8;letter-spacing:.04em;text-shadow:0 1px 16px #050b12;
             }
             @media(max-width:700px) {.survivor-tile .tile-name-vertical::after {font-size:24px}}
           `;
