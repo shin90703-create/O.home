@@ -211,25 +211,31 @@ export default function AshlinePage() {
       <a href="/" style={{ color: '#e9edf1' }}>O.HOME으로 돌아가기</a>
     </div>;
   }
-  return <section style={{ background: '#090e15', height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', color: '#d4dce6' }}>
+  return <section style={{ position: 'relative', width: '100%', height: '100%', minHeight: 0, overflow: 'hidden', background: '#090e15', color: '#d4dce6' }}>
     <iframe
       ref={frame}
       src="/ashline/index.html"
       title="ASHLINE - 끝에서 시작한 기록"
-      style={{ display: 'block', width: '100%', flex: 1, minHeight: 0, border: 0 }}
+      style={{ display: 'block', width: '100%', height: '100%', minHeight: 0, border: 0 }}
     />
-    <footer style={{ position: 'relative', zIndex: 10, flexShrink: 0, height: 46, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, padding: '0 20px', background: '#111923', borderTop: '1px solid #35414d', fontSize: 12 }}>
-      <span style={{ marginRight: 'auto', letterSpacing: '.12em', fontSize: 10, color: '#8799a9' }}>ASHLINE · O.HOME ACCOUNT</span>
-      <div style={{ position: 'relative' }}>
-        <button type="button" aria-expanded={accountOpen} aria-haspopup="menu" onClick={() => setAccountOpen(v => !v)}
-          style={{ display: 'flex', alignItems: 'center', gap: 9, color: '#e2e9f1', padding: '5px 8px' }}>
-          <span aria-hidden style={{ width: 22, height: 22, borderRadius: '50%', background: user.avatarColor || '#536171', border: '1px solid #73808d' }} />
-          <span>{user.nickname}</span><span style={{ fontSize: 10 }}>▴</span>
-        </button>
-        {accountOpen && <div role="menu" style={{ position: 'absolute', right: 0, bottom: 'calc(100% + 8px)', minWidth: 156, background: '#192430', border: '1px solid #43515e', boxShadow: '0 9px 30px #0009', borderRadius: 8, padding: 5 }}>
-          <button role="menuitem" onClick={leaveHome} style={{ width: '100%', padding: '9px 12px', textAlign: 'left' }}>자관 목록으로</button>
-        </div>}
-      </div>
-    </footer>
+    {/* ASHLINE's existing upper-right radio indicator is replaced by an account control.
+        The iframe is same-origin, but the account actions stay in the authenticated O.HOME shell. */}
+    <div style={{ position: 'absolute', zIndex: 20, top: 16, right: 27 }}>
+      <button
+        type="button"
+        aria-label={`${user.nickname} 계정 메뉴`}
+        aria-expanded={accountOpen}
+        aria-haspopup="menu"
+        title={`${user.nickname} · 자관 목록으로`}
+        onClick={() => setAccountOpen(v => !v)}
+        style={{ width: 38, height: 38, display: 'grid', placeItems: 'center', border: '1px solid #47606d', borderRadius: '50%', background: '#0d1b24', color: '#b5d1d8', boxShadow: '0 0 0 4px #0d1b24', cursor: 'pointer' }}
+      >
+        <span aria-hidden style={{ display: 'block', width: 23, height: 23, borderRadius: '50%', border: '2px solid #b1cbd3', background: '#819da6', boxShadow: 'inset 0 0 0 3px #0d1b24' }} />
+      </button>
+      {accountOpen && <div role="menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 10px)', minWidth: 166, borderRadius: 7, background: '#14232f', border: '1px solid #435766', boxShadow: '0 12px 28px #000a', padding: 5, color: '#e0e9ef' }}>
+        <div style={{ padding: '6px 10px 8px', color: '#8da5b2', fontSize: 11 }}>{user.nickname}</div>
+        <button role="menuitem" type="button" onClick={leaveHome} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px', color: '#e0e9ef', fontSize: 12 }}>자관 목록으로</button>
+      </div>}
+    </div>
   </section>;
 }
