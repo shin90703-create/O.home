@@ -174,6 +174,9 @@ export function TopBar() {
   const visMenu = menu.slice(0, visCount);
   const moreMenu = menu.slice(visCount);
 
+  // ASHLINE has its own immersive navigation and account footer.
+  if (pathname === '/ashline') return null;
+
   return (
     <header className="topbar" ref={topRef}>
       {/* 로고 — 텍스트·서브타이틀·정렬은 환경설정 > 디자인 (5.2).
