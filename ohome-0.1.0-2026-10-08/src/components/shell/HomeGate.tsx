@@ -41,6 +41,12 @@ function MemberHomePicker({ uid }: { uid: string }) {
 
 export function HomeGate({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, ready, logout } = useAuth();
+  useEffect(() => {
+    // A member logging into the dedicated ASHLINE home should open the game,
+    // not the unrelated O.HOME dashboard.
+    if (ready && user?.role === 'member' && currentHomeId() === 'ashline-chapter01'
+        && window.location.pathname === '/') window.location.replace('/ashline');
+  }, [ready, user?.id, user?.role]);
   if (!isServerMode()) return <>{children}</>;
   if (!ready) return null;
   const home = currentHomeId();
@@ -58,6 +64,8 @@ export function HomeGate({ children }: { children: React.ReactNode }) {
   if (!home && user.role === 'member') {
     return <MemberHomePicker uid={user.id} />;
   }
+  if (home === 'ashline-chapter01' && user.role === 'member'
+      && typeof window !== 'undefined' && window.location.pathname === '/') return null;
   if (!home) {
     return (
       <div className="setup-wrap">
