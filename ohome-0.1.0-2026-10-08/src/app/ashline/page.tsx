@@ -228,14 +228,14 @@ export default function AshlinePage() {
             .sidebar {overflow-y:auto !important;min-height:0 !important;overscroll-behavior:contain;scrollbar-width:thin}
             .survivor-tile .tile-name-vertical {
               top:auto !important;bottom:22% !important;
-              left:auto !important;right:18px !important;
-              height:auto !important;max-height:none !important;
+              left:auto !important;right:0 !important;
+              width:42px !important;height:auto !important;max-height:none !important;
               writing-mode:vertical-rl !important;
               text-orientation:sideways !important;
               transform:rotate(180deg) !important;
               transform-origin:center center !important;
               font-size:0 !important;overflow:visible !important;
-              width:max-content !important;white-space:nowrap !important;
+              box-sizing:border-box !important;white-space:nowrap !important;
             }
             .survivor-tile .tile-name-vertical::after {
               content:attr(data-roman-name);
