@@ -24,6 +24,7 @@ export interface Home {
 
 const PICK_KEY = 'ohome.home.v1';   // 총관리자가 고른 홈 (기기 보관)
 const MEMBER_PICK_PREFIX = 'ohome.member.home.v1.'; // 회원별 마지막 선택 자관
+const MEMBER_CHOOSE_PREFIX = 'ohome.member.choose.v1.'; // 회원이 직접 자관 목록을 열었을 때
 
 let current: string | null = null;
 
@@ -55,11 +56,18 @@ export function pickedMemberHomeId(uid: string): string | null {
 
 export function enterMemberHome(uid: string, id: string) {
   try { localStorage.setItem(MEMBER_PICK_PREFIX + uid, id); } catch { /* 무시 */ }
+  try { sessionStorage.removeItem(MEMBER_CHOOSE_PREFIX + uid); } catch { /* 무시 */ }
   window.location.href = id === 'ashline-chapter01' ? '/ashline' : '/';
+}
+
+/** 단일 자관 회원이라도 명시적으로 목록을 요청하면 선택 화면을 보여준다. */
+export function memberWantsHomePicker(uid: string): boolean {
+  try { return sessionStorage.getItem(MEMBER_CHOOSE_PREFIX + uid) === '1'; } catch { return false; }
 }
 
 export function chooseAnotherMemberHome(uid: string) {
   try { localStorage.removeItem(MEMBER_PICK_PREFIX + uid); } catch { /* 무시 */ }
+  try { sessionStorage.setItem(MEMBER_CHOOSE_PREFIX + uid, '1'); } catch { /* 무시 */ }
   window.location.href = '/';
 }
 
