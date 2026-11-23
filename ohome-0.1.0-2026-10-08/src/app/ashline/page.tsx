@@ -9,7 +9,7 @@ import { getApp } from 'firebase/app';
 import { doc, getDoc, getFirestore, onSnapshot, runTransaction } from 'firebase/firestore';
 import { useAuth } from '@/lib/auth';
 import { backend, isServerMode } from '@/lib/backend';
-import { currentHomeId, leaveHome } from '@/lib/home';
+import { currentHomeId, leaveHome, chooseAnotherMemberHome } from '@/lib/home';
 import { serverConfig } from '@/lib/serverConfig';
 
 type Slot = 'A' | 'B';
@@ -368,7 +368,7 @@ export default function AshlinePage() {
       </button>
       {accountOpen && <div role="menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 10px)', minWidth: 166, borderRadius: 7, background: '#14232f', border: '1px solid #435766', boxShadow: '0 12px 28px #000a', padding: 5, color: '#e0e9ef' }}>
         <div style={{ padding: '6px 10px 8px', color: '#8da5b2', fontSize: 11 }}>{user.nickname}</div>
-        <button role="menuitem" type="button" onClick={leaveHome} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px', color: '#e0e9ef', fontSize: 12 }}>자관 목록으로</button>
+        <button role="menuitem" type="button" onClick={() => user.role === 'admin' ? leaveHome() : chooseAnotherMemberHome(user.id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px', color: '#e0e9ef', fontSize: 12 }}>자관 목록으로</button>
         <button role="menuitem" type="button" disabled={resetting || !slot.current} onClick={() => void resetProgress.current?.()} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px', color: '#ffc0b8', fontSize: 12 }}>{resetting ? '초기화 중…' : '진행상황 초기화'}</button>
       </div>}
     </div>
