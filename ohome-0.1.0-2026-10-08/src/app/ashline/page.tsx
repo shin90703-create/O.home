@@ -217,21 +217,50 @@ export default function AshlinePage() {
       src="/ashline/index.html"
       title="ASHLINE - 끝에서 시작한 기록"
       onLoad={() => {
-        // ASHLINE is same-origin; restore independent scrolling for the left navigation
-        // if the embedded application's own fixed-height styles clipped it.
         const doc = frame.current?.contentDocument;
-        if (!doc || doc.getElementById('ohome-ashline-sidebar-scroll')) return;
-        const style = doc.createElement('style');
-        style.id = 'ohome-ashline-sidebar-scroll';
-        style.textContent = `
-          .sidebar, #sidebar, .side-nav, .sidebar-nav {
-            overflow-y: auto !important;
-            overscroll-behavior: contain;
-            min-height: 0 !important;
-            scrollbar-width: thin;
-          }
-        `;
-        doc.head.appendChild(style);
+        if (!doc) return;
+        // Installed within the iframe so the game can freely re-render its cards.
+        // Suppress the original Korean handwritten label at the CSS level.
+        if (!doc.getElementById('ohome-ashline-card-fix')) {
+          const style = doc.createElement('style');
+          style.id = 'ohome-ashline-card-fix';
+          style.textContent = `
+            .sidebar {overflow-y:auto !important;min-height:0 !important;overscroll-behavior:contain;scrollbar-width:thin}
+            .survivor-tile .tile-name-vertical {
+              top:auto !important;bottom:15% !important;
+              left:auto !important;right:0 !important;
+              width:42px !important;height:auto !important;max-height:none !important;
+              writing-mode:vertical-rl !important;
+              text-orientation:sideways !important;
+              transform:rotate(180deg) !important;
+              transform-origin:center center !important;
+              font-size:0 !important;overflow:visible !important;
+              box-sizing:border-box !important;white-space:nowrap !important;
+            }
+            .survivor-tile .tile-name-vertical::after {
+              content:attr(data-roman-name);
+              font:italic 36px 'Segoe Print','Brush Script MT','Apple Chancery',cursive;
+              color:#fff;opacity:.8;letter-spacing:.04em;text-shadow:0 1px 16px #050b12;
+            }
+            @media(max-width:700px) {.survivor-tile .tile-name-vertical::after {font-size:24px}}
+          `;
+          doc.head.appendChild(style);
+        }
+        const setRomanNames = () => {
+          doc.querySelectorAll<HTMLElement>('.survivor-tile').forEach(card => {
+            const label = card.querySelector<HTMLElement>('.tile-name-vertical');
+            if (!label) return;
+            const slot = card.getAttribute('data-id') || 'A';
+            const footerRoman = card.querySelector('.tile-footer small')?.textContent?.trim() || '';
+            const roman = footerRoman && footerRoman !== 'UNREGISTERED SURVIVOR' && !/[가-힣]/.test(footerRoman)
+              ? footerRoman : `SURVIVOR ${slot}`;
+            if (label.dataset.romanName !== roman) label.dataset.romanName = roman;
+          });
+        };
+        setRomanNames();
+        const observer = new MutationObserver(setRomanNames);
+        observer.observe(doc.body, {childList:true,subtree:true,characterData:true});
+        frame.current?.addEventListener('load', () => observer.disconnect(), {once:true});
       }}
       style={{ display: 'block', width: '100%', height: '100%', minHeight: 0, border: 0 }}
     />
