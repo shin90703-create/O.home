@@ -338,8 +338,8 @@ export function TopBar() {
                 )}
               </>
             )}
-            {!isAdmin && user.homeIds && user.homeIds.length > 1 && (
-              <button onClick={() => { setMenuOpen(false); chooseAnotherMemberHome(user.id); }}>자관 변경</button>
+            {!isAdmin && currentHomeId() && (
+              <button onClick={() => { setMenuOpen(false); chooseAnotherMemberHome(user.id); }}>자관 변경 · 애시라인</button>
             )}
             <button onClick={() => { setMenuOpen(false); logout(); }}>로그아웃</button>
           </div>
