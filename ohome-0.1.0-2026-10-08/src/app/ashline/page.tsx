@@ -12,6 +12,7 @@ import { backend, isServerMode } from '@/lib/backend';
 import { currentHomeId, leaveHome, chooseAnotherMemberHome } from '@/lib/home';
 import { serverConfig } from '@/lib/serverConfig';
 import { AshlineMusic, type AshlineTrack } from '@/components/ashline/AshlineMusic';
+import { AshlineMusic, type AshlineTrack } from '@/components/ashline/AshlineMusic';
 
 type Slot = 'A' | 'B';
 type World = {
@@ -27,6 +28,24 @@ type IframeMsg = {
   requestId?: string;
   blob?: Blob;
 };
+
+/** Track metadata is shared; each visitor controls playback independently. */
+type MusicList = { tracks: AshlineTrack[]; index: number };
+function musicFromWorld(payload: Record<string, unknown> | null): MusicList {
+  const raw = payload?.bgm;
+  if (!raw || typeof raw !== 'object') return { tracks: [], index: 0 };
+  const bgm = raw as { tracks?: unknown; index?: unknown };
+  const tracks: AshlineTrack[] = Array.isArray(bgm.tracks)
+    ? bgm.tracks.filter((t): t is Record<string, unknown> => !!t && typeof t === 'object')
+        .filter(t => typeof t.ytid === 'string' && (
+          (t.kind === 'video' && /^[A-Za-z0-9_-]{11}$/.test(t.ytid))
+          || (t.kind === 'list' && /^[A-Za-z0-9_-]{8,100}$/.test(t.ytid))
+        ))
+        .map(t => ({ title: typeof t.title === 'string' ? t.title : 'BGM', ytid: t.ytid as string,
+          kind: t.kind as 'video' | 'list' }))
+    : [];
+  return { tracks, index: Math.max(0, Math.min(tracks.length - 1, Number(bgm.index) || 0)) };
+}
 
 const MAX_STATE_CHARS = 700_000;
 const MAX_UPLOAD = 4 * 1024 * 1024;
@@ -52,6 +71,11 @@ export default function AshlinePage() {
   const { user, ready, mock } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [music, setMusic] = useState<MusicList>({ tracks: [], index: 0 });
+  const syncMusic = (payload: Record<string, unknown> | null) => {
+    const next = musicFromWorld(payload);
+    setMusic(prev => JSON.stringify(prev) === JSON.stringify(next) ? prev : next);
+  };
   const resetProgress = useRef<(() => Promise<void>) | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const frameReady = useRef(false);
@@ -124,6 +148,7 @@ export default function AshlinePage() {
       const w = latest.current;
       if (!frameReady.current || !s || !w) return;
       rev.current = w.revision;
+      syncMusic(w.payload);
       if (frame.current) frame.current.dataset.initialized = 'yes';
       send({ type: 'ASHLINE_INIT', slot: s, revision: w.revision, payload: w.payload });
     };
@@ -158,6 +183,7 @@ export default function AshlinePage() {
       }
       if (msg.type === 'ASHLINE_WRITE' && msg.payload) acceptBgm(msg.payload);
       if (msg.type !== 'ASHLINE_WRITE' || !msg.payload || writeInProgress.current) return;
+      syncMusic(msg.payload);
       // Firestore counts UTF-8 bytes, not JavaScript string characters.
       // Keep a conservative margin for document keys, metadata and future schema additions.
       const payloadBytes = new TextEncoder().encode(JSON.stringify(msg.payload)).byteLength;
@@ -227,6 +253,7 @@ export default function AshlinePage() {
           if (!snap.exists() || disposed) return;
           const world = snap.data() as World;
           latest.current = world;
+          syncMusic(world.payload);
           acceptBgm(world.payload);
           if (resetPending) return;
           if (frame.current?.dataset.initialized && world.payload === null && world.revision > rev.current && !snap.metadata.hasPendingWrites) {
@@ -272,6 +299,7 @@ export default function AshlinePage() {
     </div>;
   }
   return <section style={{ position: 'relative', width: '100%', height: '100%', minHeight: 0, overflow: 'hidden', background: '#090e15', color: '#d4dce6' }}>
+    <AshlineMusic tracks={music.tracks} initialIndex={music.index} />
     <iframe
       ref={frame}
       src="/ashline/index.html"
@@ -286,6 +314,10 @@ export default function AshlinePage() {
           style.id = 'ohome-ashline-card-fix';
           style.textContent = `
             .sidebar {overflow-y:auto !important;min-height:0 !important;overscroll-behavior:contain;scrollbar-width:thin}
+            /* Only replace the old playback, never the soundtrack editor. */
+            #bgmMount, .footer .bgm-block {display:none !important}
+            .footer .itemfoot:has(.bgm-block) {display:none !important}
+            .settings-layout [data-action="bgmPlay"] {display:none !important}
             .survivor-tile .tile-name-vertical {
               top:auto !important;bottom:15% !important;
               left:auto !important;right:0 !important;
@@ -427,6 +459,37 @@ export default function AshlinePage() {
           }));
         }, true);
         frame.current?.addEventListener('load', () => rpListObserver.disconnect(), { once: true });
+        // Pass the embedded game's music buttons to the stable O.HOME-style player.
+        const passMusicClick = (event: MouseEvent) => {
+          const element = (event.target as Element | null)?.closest?.<HTMLElement>('[data-action]');
+          if (!element) return;
+          const mapped: Record<string, string> = {
+            bgmPlay: 'toggle', bgmPrev: 'prev', bgmNext: 'next',
+            bgmSelect: 'select', bgmDock: 'open'
+          };
+          const action = element.dataset.action;
+          if (!action || !mapped[action]) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          window.dispatchEvent(new CustomEvent('ashline-bgm-control', {
+            detail: { action: mapped[action], index: Number(element.dataset.id) }
+          }));
+        };
+        doc.addEventListener('click', passMusicClick, true);
+        const removeLegacyAudio = () => {
+          const dock = doc.getElementById('bgmMount');
+          if (dock && dock.childElementCount) {
+            dock.replaceChildren();
+            dock.dataset.src = '';
+          }
+        };
+        const bgmObserver = new MutationObserver(removeLegacyAudio);
+        bgmObserver.observe(doc.body, { childList: true, subtree: true });
+        removeLegacyAudio();
+        frame.current?.addEventListener('load', () => {
+          doc.removeEventListener('click', passMusicClick, true);
+          bgmObserver.disconnect();
+        }, { once: true });
         const setRomanNames = () => {
           doc.querySelectorAll<HTMLElement>('.survivor-tile').forEach(card => {
             const label = card.querySelector<HTMLElement>('.tile-name-vertical');
