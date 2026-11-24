@@ -17,7 +17,7 @@ import type { HomeRow } from '@/lib/backend/types';
 import { LoginCard } from './LoginCard';
 import { HomeList } from './HomeList';
 
-function MemberHomePicker({ uid }: { uid: string }) {
+function MemberHomePicker({ uid, nickname, onLogout }: { uid: string; nickname: string; onLogout: () => Promise<void> }) {
   const [homes, setHomes] = useState<HomeRow[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -38,15 +38,24 @@ function MemberHomePicker({ uid }: { uid: string }) {
   }, [reloadKey]);
   return <div className="setup-wrap">
     <div className="panel setup-box wide" style={{ margin: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 14 }}>
-        <h1 style={{ margin: 0 }}>접속할 자관 선택</h1>
-        <button type="button" className="btn btn-ghost" disabled={loading}
-          onClick={() => setReloadKey(v => v + 1)}>{loading ? '확인 중…' : '목록 새로고침'}</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 16 }}>
+        <h1 style={{ fontFamily: 'var(--serif-base)', fontSize: 22, letterSpacing: '.25em', margin: 0, color: 'var(--ink)' }}>Relation List</h1>
+        <span style={{ fontSize: 12, color: 'var(--faint)' }}>{nickname} · 회원
+          <button className="btn btn-ghost" style={{ marginLeft: 10, padding: '3px 10px', fontSize: 11 }} onClick={() => void onLogout()}>로그아웃</button>
+        </span>
       </div>
+      <p className="hint" style={{ marginBottom: 12 }}>참여 중인 자관을 선택해 주세요.</p>
+      <button type="button" className="btn btn-ghost" disabled={loading}
+        style={{ marginBottom: 12, fontSize: 11 }}
+        onClick={() => setReloadKey(v => v + 1)}>{loading ? '확인 중…' : '목록 새로고침'}</button>
       {error && <p className="setup-err">{error}</p>}
       <div style={{ display: 'grid', gap: 10 }}>
-        {homes.map(h => <button key={h.id} className="btn btn-ghost" style={{ padding: 16, textAlign: 'left' }}
-          onClick={() => enterMemberHome(uid, h.id)}>{h.name} →</button>)}
+        {homes.map(h => <div key={h.id} className="panel" style={{ padding: '14px 16px', border: '1px solid var(--line)', boxShadow: 'none', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <b style={{ fontSize: 15, color: 'var(--ink)' }}>{h.id === 'ashline-chapter01' ? '애시라인 · ASHLINE' : h.name}</b>
+          </div>
+          <button className="btn btn-dark" onClick={() => enterMemberHome(uid, h.id)}>들어가기 →</button>
+        </div>)}
       </div>
       {!homes.length && !error && <p className="hint">{loading ? '참여 중인 자관을 확인하고 있습니다.' : '연결된 자관이 없습니다. 관리자에게 회원 연결 상태를 확인해 주세요.'}</p>}
     </div>
@@ -76,7 +85,7 @@ export function HomeGate({ children }: { children: React.ReactNode }) {
   }
   if (isAdmin && !home) return <HomeList />;
   if (!home && user.role === 'member') {
-    return <MemberHomePicker uid={user.id} />;
+    return <MemberHomePicker uid={user.id} nickname={user.nickname} onLogout={logout} />;
   }
   if (home === 'ashline-chapter01' && user.role === 'member'
       && typeof window !== 'undefined' && window.location.pathname === '/') return null;
