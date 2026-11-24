@@ -145,6 +145,26 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
     player.current?.setVolume(safe);
     try { localStorage.setItem(VOLUME_KEY, String(safe)); } catch {}
   };
+  // The same-origin ASHLINE iframe sends native click gestures to this
+  // player synchronously, rather than asynchronously through React state.
+  // This matters for browsers that block YouTube playback without a gesture.
+  const onCommandRef = useRef<(detail: { action?: string; index?: number }) => void>(() => {});
+  onCommandRef.current = detail => {
+    if (detail.action === 'bgmPlay' || detail.action === 'bgmDock') toggle();
+    else if (detail.action === 'bgmNext') startAt(indexRef.current + 1);
+    else if (detail.action === 'bgmPrev') startAt(indexRef.current - 1);
+    else if (detail.action === 'bgmSelect' && Number.isInteger(detail.index))
+      startAt(detail.index!);
+  };
+  useEffect(() => {
+    const receive = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ action?: string; index?: number }>).detail;
+      if (detail && typeof detail === 'object') onCommandRef.current(detail);
+    };
+    window.addEventListener('ashline-bgm-control', receive);
+    return () => window.removeEventListener('ashline-bgm-control', receive);
+  }, []);
+
   if (!tracks.length) return null;
   const track = tracks[index] ?? tracks[0];
 
