@@ -13,6 +13,8 @@ import { currentHomeId, leaveHome, chooseAnotherMemberHome } from '@/lib/home';
 import { serverConfig } from '@/lib/serverConfig';
 import { AshlineMusic, type AshlineTrack } from '@/components/ashline/AshlineMusic';
 
+import { armMsgSound, playMsgTone, unlockMsgSound } from '@/lib/msgSound';
+
 type Slot = 'A' | 'B';
 type World = {
   slots: { A: string; B: string | null };
@@ -44,6 +46,23 @@ function musicFromWorld(payload: Record<string, unknown> | null): MusicList {
           kind: t.kind as 'video' | 'list' }))
     : [];
   return { tracks, index: Math.max(0, Math.min(tracks.length - 1, Number(bgm.index) || 0)) };
+}
+
+function partnerRoleplayEntries(payload: World['payload'], viewer: Slot): Map<string, string> {
+  const entries = new Map<string, string>();
+  const partner = viewer === 'A' ? 'B' : 'A';
+  if (!Array.isArray(payload?.roleplays)) return entries;
+  for (const room of payload.roleplays) {
+    if (!room?.id || !Array.isArray(room.participants) || !room.participants.includes(viewer)) continue;
+    if (room.creator === partner) entries.set(JSON.stringify([room.id]), String(room.title ?? ''));
+    if (!Array.isArray(room.messages)) continue;
+    for (const message of room.messages) {
+      if (message?.from === partner && message.id != null && typeof message.text === 'string') {
+        entries.set(JSON.stringify([room.id, message.id]), message.text);
+      }
+    }
+  }
+  return entries;
 }
 
 const MAX_STATE_CHARS = 700_000;
@@ -87,6 +106,9 @@ export default function AshlinePage() {
       return;
     }
 
+    armMsgSound();
+    let previousPartnerEntries: Map<string, string> | undefined;
+    let lastSoundRevision = -1;
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
     const origin = window.location.origin;
@@ -223,9 +245,22 @@ export default function AshlinePage() {
         if (disposed) return;
         slot.current = joined;
         setStatus('ASHLINE 접속 완료');
-        unsubscribe = onSnapshot(ref, snap => {
+        unsubscribe = onSnapshot(ref, { includeMetadataChanges: true }, snap => {
           if (!snap.exists() || disposed) return;
           const world = snap.data() as World;
+          if (!snap.metadata.fromCache && !snap.metadata.hasPendingWrites && world.revision > lastSoundRevision) {
+            const entries = partnerRoleplayEntries(world.payload, joined);
+            if (previousPartnerEntries) {
+              for (const [key, value] of entries) {
+                if (previousPartnerEntries.get(key) !== value) {
+                  playMsgTone();
+                  break;
+                }
+              }
+            }
+            previousPartnerEntries = entries;
+            lastSoundRevision = world.revision;
+          }
           latest.current = world;
           syncMusic(world.payload);
           if (resetPending) return;
@@ -280,6 +315,8 @@ export default function AshlinePage() {
       onLoad={() => {
         const doc = frame.current?.contentDocument;
         if (!doc) return;
+        doc.addEventListener('click', unlockMsgSound, true);
+        doc.addEventListener('keydown', unlockMsgSound, true);
         // Installed within the iframe so the game can freely re-render its cards.
         // Suppress the original Korean handwritten label at the CSS level.
         if (!doc.getElementById('ohome-ashline-card-fix')) {

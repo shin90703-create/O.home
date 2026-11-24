@@ -13,26 +13,19 @@ export function setMsgSoundOn(on: boolean): void {
 }
 
 let ctx: AudioContext | null = null;
-let armed = false;
+/** Call inside a user gesture, including gestures inside the ASHLINE frame. */
+export function unlockMsgSound(): void {
+  try {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (AC && !ctx) ctx = new AC();
+    if (ctx?.state === 'suspended') void ctx.resume().catch(() => {});
+  } catch { /* Sound is optional. */ }
+}
 
-/** 브라우저 정책상 소리는 사용자가 한 번이라도 클릭·키 입력을 한 뒤에만 난다 — 첫 상호작용에서 AudioContext를 만들어 둔다 */
 export function armMsgSound(): void {
-  if (armed || typeof window === 'undefined') return;
-  armed = true;
-  const make = () => {
-    try {
-      const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (AC && !ctx) ctx = new AC();
-      ctx?.resume().catch(() => { /* 무시 */ });
-    } catch { /* 소리 없이 */ }
-    remove();
-  };
-  const remove = () => {
-    window.removeEventListener('pointerdown', make, true);
-    window.removeEventListener('keydown', make, true);
-  };
-  window.addEventListener('pointerdown', make, true);
-  window.addEventListener('keydown', make, true);
+  if (typeof window === 'undefined') return;
+  window.addEventListener('pointerdown', unlockMsgSound, true);
+  window.addEventListener('keydown', unlockMsgSound, true);
 }
 
 /** 두 음짜리 짧은 종소리 — E6를 짧게, A6를 길게 여운. 아직 상호작용이 없었으면(컨텍스트 없음) 조용히 넘어간다 */
