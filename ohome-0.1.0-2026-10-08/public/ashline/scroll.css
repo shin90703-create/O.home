@@ -1,0 +1,1 @@
+*{scrollbar-width:thin;scrollbar-color:rgba(108,135,146,.28) transparent}*::-webkit-scrollbar{width:4px;height:4px}*::-webkit-scrollbar-track,*::-webkit-scrollbar-corner{background:transparent}*::-webkit-scrollbar-thumb{background:rgba(108,135,146,.28);border-radius:8px}*::-webkit-scrollbar-thumb:hover{background:#516570}
