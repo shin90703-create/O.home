@@ -11,7 +11,7 @@ export type AshlineTrack = { title: string; ytid: string; kind: 'video' | 'list'
 
 interface Player {
   loadVideoById(id: string): void;
-  loadPlaylist(options: { listType: 'playlist'; list: string; index: number }): void;
+  loadPlaylist?: (options: { listType: 'playlist'; list: string; index: number }) => void;
   playVideo(): void;
   pauseVideo(): void;
   setVolume(v: number): void;
@@ -66,7 +66,7 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
       return;
     }
     try {
-      if (track.kind === 'list') player.current.loadPlaylist({ listType: 'playlist', list: track.ytid, index: 0 });
+      if (track.kind === 'list') player.current.loadPlaylist?.({ listType: 'playlist', list: track.ytid, index: 0 });
       else player.current.loadVideoById(track.ytid);
       player.current.setVolume(volumeRef.current);
       player.current.playVideo();
