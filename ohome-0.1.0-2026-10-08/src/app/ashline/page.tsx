@@ -12,7 +12,6 @@ import { backend, isServerMode } from '@/lib/backend';
 import { currentHomeId, leaveHome, chooseAnotherMemberHome } from '@/lib/home';
 import { serverConfig } from '@/lib/serverConfig';
 import { AshlineMusic, type AshlineTrack } from '@/components/ashline/AshlineMusic';
-import { AshlineMusic, type AshlineTrack } from '@/components/ashline/AshlineMusic';
 
 type Slot = 'A' | 'B';
 type World = {
@@ -50,23 +49,6 @@ function musicFromWorld(payload: Record<string, unknown> | null): MusicList {
 const MAX_STATE_CHARS = 700_000;
 const MAX_UPLOAD = 4 * 1024 * 1024;
 
-type SharedBgm = { tracks: AshlineTrack[]; index: number };
-function readSharedBgm(payload: Record<string, unknown> | null): SharedBgm {
-  const source = payload?.bgm;
-  const raw = source && typeof source === 'object' ? source as Record<string, unknown> : {};
-  const tracks: AshlineTrack[] = Array.isArray(raw.tracks)
-    ? raw.tracks.slice(0, 150).flatMap((item: unknown) => {
-      if (!item || typeof item !== 'object') return [];
-      const t = item as Record<string, unknown>;
-      const ytid = typeof t.ytid === 'string' ? t.ytid : '';
-      if (!/^[A-Za-z0-9_-]{8,100}$/.test(ytid)) return [];
-      return [{ title: typeof t.title === 'string' ? t.title : 'YouTube BGM',
-        ytid, kind: t.kind === 'list' ? 'list' as const : 'video' as const }];
-    }) : [];
-  const requested = typeof raw.index === 'number' && Number.isFinite(raw.index) ? Math.floor(raw.index) : 0;
-  return { tracks, index: Math.max(0, Math.min(tracks.length - 1, requested)) };
-}
-
 export default function AshlinePage() {
   const { user, ready, mock } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
@@ -85,13 +67,6 @@ export default function AshlinePage() {
   const writeInProgress = useRef(false);
   const [status, setStatus] = useState('ASHLINE 접속을 확인하는 중');
   const [failed, setFailed] = useState<string | null>(null);
-  const [bgm, setBgm] = useState<SharedBgm>({ tracks: [], index: 0 });
-  const bgmLive = useRef<SharedBgm>({ tracks: [], index: 0 });
-  const acceptBgm = (payload: Record<string, unknown> | null) => {
-    const next = readSharedBgm(payload);
-    bgmLive.current = next;
-    setBgm(next);
-  };
   const uid = user?.id;
 
   useEffect(() => {
@@ -181,7 +156,6 @@ export default function AshlinePage() {
         }
         return;
       }
-      if (msg.type === 'ASHLINE_WRITE' && msg.payload) acceptBgm(msg.payload);
       if (msg.type !== 'ASHLINE_WRITE' || !msg.payload || writeInProgress.current) return;
       syncMusic(msg.payload);
       // Firestore counts UTF-8 bytes, not JavaScript string characters.
@@ -254,7 +228,6 @@ export default function AshlinePage() {
           const world = snap.data() as World;
           latest.current = world;
           syncMusic(world.payload);
-          acceptBgm(world.payload);
           if (resetPending) return;
           if (frame.current?.dataset.initialized && world.payload === null && world.revision > rev.current && !snap.metadata.hasPendingWrites) {
             window.location.reload();
@@ -441,22 +414,11 @@ export default function AshlinePage() {
         rpListObserver.observe(doc.body, { childList: true, subtree: true });
         updateRpList();
 
-        // Intercept the old iframe's BGM controls before they instantiate a
-        // second, autoplaying YouTube embed. Keep its list editor intact.
-        const bgmActions = new Set(['bgmPlay', 'bgmSelect', 'bgmPrev', 'bgmNext', 'bgmDock']);
+        // Keep the RP list's own collapse behavior; music click handling follows below.
         doc.addEventListener('click', event => {
           const actionNode = (event.target as Element | null)?.closest?.<HTMLElement>('[data-action]');
           const action = actionNode?.dataset.action;
-          if (!action) return;
           if (action === 'newRoom' || action === 'openRoom') rpRoomsCollapsed = true;
-          if (!bgmActions.has(action) || !bgmLive.current.tracks.length) return;
-          event.preventDefault();
-          event.stopPropagation();
-          event.stopImmediatePropagation();
-          const index = actionNode?.dataset.id === undefined ? undefined : Number(actionNode.dataset.id);
-          window.dispatchEvent(new CustomEvent('ashline-bgm-control', {
-            detail: { action, index },
-          }));
         }, true);
         frame.current?.addEventListener('load', () => rpListObserver.disconnect(), { once: true });
         // Pass the embedded game's music buttons to the stable O.HOME-style player.
@@ -508,7 +470,6 @@ export default function AshlinePage() {
       }}
       style={{ display: 'block', width: '100%', height: '100%', minHeight: 0, border: 0 }}
     />
-    <AshlineMusic tracks={bgm.tracks} initialIndex={bgm.index} />
     {/* ASHLINE's existing upper-right radio indicator is replaced by an account control.
         The iframe is same-origin, but the account actions stay in the authenticated O.HOME shell. */}
     <div style={{ position: 'absolute', zIndex: 20, top: 16, right: 27 }}>
