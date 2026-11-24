@@ -41,8 +41,6 @@ export function HomeList() {
   const [eName, setEName] = useState('');
   const [eCode, setECode] = useState('');
   const [ePick, setEPick] = useState<string[]>([]);
-  const [ashlineLinkOpen, setAshlineLinkOpen] = useState(false);
-  const [ashlinePick, setAshlinePick] = useState<string[]>([]);
 
   const load = async () => {
     const be = backend();
@@ -95,35 +93,6 @@ export function HomeList() {
     } catch (e) {
       toast(`만들지 못했습니다 — ${why(e)}`);
     }
-    setBusy(false);
-  };
-
-  // ASHLINE은 기존 자관과 분리된 고정 홈을 사용한다.
-  const openAshline = async () => {
-    const be = backend();
-    if (!be || busy) return;
-    setBusy(true);
-    try {
-      const id = 'ashline-chapter01';
-      if (!(homes ?? []).some(h => h.id === id)) {
-        await be.createHome({ id, name: '애시라인', inviteCode: randomInviteCode(), createdAt: Date.now() });
-      }
-      // 선택된 홈을 부팅 때 읽은 뒤 /ashline을 표시한다.
-      try { localStorage.setItem('ohome.home.v1', id); } catch { /* 무시 */ }
-      window.location.href = '/ashline';
-    } catch (e) {
-      toast(`애시라인에 들어가지 못했습니다 — ${why(e)}`);
-      setBusy(false);
-    }
-  };
-
-  const connectAshlineMembers = async () => {
-    if (!ashlinePick.length || busy) return;
-    setBusy(true);
-    const count = await attach('ashline-chapter01', ashlinePick);
-    setAshlinePick([]);
-    await load();
-    toast(count ? `애시라인에 기존 회원 ${count}명을 연결했습니다` : '연결된 회원이 없습니다');
     setBusy(false);
   };
 
@@ -211,7 +180,7 @@ export function HomeList() {
         )}
 
         <div style={{ display: 'grid', gap: 10 }}>
-          {homes?.filter(h => h.id !== 'ashline-chapter01').map(h => (
+          {homes?.map(h => (
             <div key={h.id} className="panel" style={{ padding: '14px 16px', boxShadow: 'none', border: '1px solid var(--line)' }}>
               {editId === h.id ? (
                 <div style={{ display: 'grid', gap: 8 }}>
@@ -239,7 +208,7 @@ export function HomeList() {
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 180 }}>
-                    <b style={{ fontSize: 15, color: 'var(--ink)' }}>{h.name}</b>
+                    <b style={{ fontSize: 15, color: 'var(--ink)' }}>{h.id === 'ashline-chapter01' ? '애시라인 · ASHLINE' : h.name}</b>
                     <div style={{ fontSize: 11.5, color: 'var(--faint)', marginTop: 4, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                       <span>가입코드 <code style={{ fontSize: 12, color: 'var(--ink)', letterSpacing: '.08em' }}>{h.inviteCode || '—'}</code>
                         <button className="btn btn-ghost" style={{ marginLeft: 6, padding: '1px 7px', fontSize: 10 }} onClick={() => copy(h.inviteCode)}>복사</button>
@@ -248,54 +217,14 @@ export function HomeList() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => startEdit(h)}>수정</button>
-                    <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={busy} onClick={() => remove(h)}>삭제</button>
+                    <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => startEdit(h)}>{h.id === 'ashline-chapter01' ? '수정 · 회원 연결' : '수정'}</button>
+                    {h.id !== 'ashline-chapter01' && <button className="btn btn-ghost" style={{ fontSize: 11 }} disabled={busy} onClick={() => remove(h)}>삭제</button>}
                     <button className="btn btn-dark" onClick={() => enterHome(h.id)}>들어가기 →</button>
                   </div>
                 </div>
               )}
             </div>
           ))}
-        </div>
-
-        <div className="panel" style={{ marginTop: 10, padding: '14px 16px', border: '1px solid var(--line)', boxShadow: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <b style={{ fontSize: 15, color: 'var(--ink)' }}>애시라인 · ASHLINE</b>
-              <div style={{ fontSize: 11.5, color: 'var(--faint)', marginTop: 4 }}>별도 기록 공간 · 기존 자관과 분리</div>
-              {homes?.find(h => h.id === 'ashline-chapter01') && (
-                <div style={{ fontSize: 11.5, color: 'var(--faint)', marginTop: 6, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                  <span>가입코드 <code style={{ fontSize: 12, color: 'var(--ink)', letterSpacing: '.08em' }}>{homes.find(h => h.id === 'ashline-chapter01')!.inviteCode}</code>
-                    <button className="btn btn-ghost" style={{ marginLeft: 6, padding: '1px 7px', fontSize: 10 }} onClick={() => void copy(homes.find(h => h.id === 'ashline-chapter01')!.inviteCode)}>복사</button>
-                  </span>
-                  <span>연결 회원 {membersOf('ashline-chapter01').length}명</span>
-                </div>
-              )}
-            </div>
-            {homes?.some(h => h.id === 'ashline-chapter01') &&
-              <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={() => setAshlineLinkOpen(v => !v)}>
-                {ashlineLinkOpen ? '연결 닫기' : '회원 연결'}
-              </button>
-            }
-            <button className="btn btn-dark" disabled={busy || homes === null} onClick={openAshline}>애시라인 들어가기 →</button>
-          </div>
-          {ashlineLinkOpen && homes?.some(h => h.id === 'ashline-chapter01') && (
-            <div style={{ marginTop: 12, borderTop: '1px solid var(--line)', paddingTop: 10 }}>
-              <p className="hint">기존 회원은 아래에서 선택해 연결해 주세요. 다른 자관의 소속은 유지됩니다. 신규 회원은 위의 애시라인 가입코드로 가입하면 됩니다.</p>
-              {membersOf('ashline-chapter01').length > 0 && (
-                <div style={{ marginTop: 8 }}>
-                  <label className="k-label">현재 연결된 회원</label>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                    {membersOf('ashline-chapter01').map(m => <span key={m.id} className="pill">{m.nickname}</span>)}
-                  </div>
-                </div>
-              )}
-              {orphanPicker(ashlinePick, setAshlinePick, 'ashline-chapter01')}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                <button className="btn btn-dark" disabled={busy || ashlinePick.length === 0} onClick={connectAshlineMembers}>선택한 회원 연결</button>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="setup-sep" />
