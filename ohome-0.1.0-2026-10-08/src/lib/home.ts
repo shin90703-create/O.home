@@ -40,7 +40,7 @@ export function pickedHomeId(): string | null {
 /** 리스트에서 홈을 골라 들어간다 — 선택을 남기고 메인부터 다시 연다 */
 export function enterHome(id: string) {
   try { localStorage.setItem(PICK_KEY, id); } catch { /* 무시 */ }
-  window.location.href = '/';
+  window.location.href = id === 'ashline-chapter01' ? '/ashline' : '/';
 }
 
 /** 「리스트로」 — 선택을 지우고 리스트(메인)로 */
