@@ -5,7 +5,7 @@ const [html,visibility,observer,player] = await Promise.all(['index.html','visib
 // These handlers use the chapter's private state. Install them in its closure before startup.
 const marker = "if(!state.sites.length)buildSites();attach();render();";
 if (!html.includes(marker)) throw Error('ASHLINE chapter startup marker missing.');
-const hooks = "if(location.href==='about:srcdoc'){\n"+observer+"\n}else{\n"+visibility+"\n"+player+"\n}\n";
-const chapter = html.replace(marker, () => hooks + marker)
-  .replace("window.parent.postMessage({type:'ASHLINE_READY'},location.origin)", "location.href!=='about:srcdoc' && window.parent.postMessage({type:'ASHLINE_READY'},location.origin)");
-await writeFile(new URL('chapter.html',dir),chapter);
+const inject = (source, hooks) => source.replace(marker, () => hooks+'\n'+marker);
+await writeFile(new URL('chapter.html',dir),inject(html,visibility+'\n'+player));
+const watch=inject(html,observer).replace("window.parent.postMessage({type:'ASHLINE_READY'},location.origin)",'void 0');
+await writeFile(new URL('observer.html',dir),watch.replace('</head>','<link rel="stylesheet" href="/ashline/scroll.css"></head>').replace('</body>','<script src="/ashline/lore.js"></script></body>'));

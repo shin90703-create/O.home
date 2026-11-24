@@ -8,19 +8,7 @@ window.addEventListener('message',e=>{if(e.source===frame.contentWindow&&e.data?
 async function start() {
   if(!/^[a-z0-9.-]{3,222}$/.test(bucket)||!/^[a-f0-9]{32}$/.test(id)||!/^[a-f0-9]{64}$/.test(secret))throw Error();
   const key=await crypto.subtle.importKey('raw',Uint8Array.from(secret.match(/../g),s=>parseInt(s,16)),'AES-GCM',false,['decrypt']);
-  const template = await fetch('/ashline/chapter.html').then(r=>{if(!r.ok)throw Error();return r.text()});
-  const parsed=new DOMParser().parseFromString(template,'text/html');
-  const nonce=Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');
-  const csp=parsed.createElement('meta');csp.httpEquiv='Content-Security-Policy';
-  csp.content="default-src 'none'; script-src 'nonce-"+nonce+"'; style-src 'unsafe-inline' https://fonts.googleapis.com "+location.origin+"; font-src https://fonts.gstatic.com data:; img-src data: blob: https:; connect-src https://api.open-meteo.com; frame-src 'none'; form-action 'none'; base-uri 'none'";
-  parsed.head.prepend(csp);
-  for(const script of parsed.querySelectorAll('script'))script.nonce=nonce;
-  for(const name of ['lore']){
-    const script=parsed.createElement('script');
-    script.nonce=nonce;script.src=location.origin+'/ashline/'+name+'.js';parsed.body.append(script);
-  }
-  const css=parsed.createElement('link');css.rel='stylesheet';css.href=location.origin+'/ashline/scroll.css';parsed.head.append(css);
-  frame.srcdoc='<!doctype html>'+parsed.documentElement.outerHTML;
+  frame.src='/ashline/observer.html';
   async function readView() {
     const path=encodeURIComponent('ohome/spectators/'+id+'/public.bin');
     const url='https://firebasestorage.googleapis.com/v0/b/'+encodeURIComponent(bucket)+'/o/'+path+'?alt=media';
