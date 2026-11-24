@@ -49,8 +49,28 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
       if (Number.isFinite(v) && v >= 0 && v <= 100 && localStorage.getItem(VOLUME_KEY) !== null) setVolume(v);
     } catch { /* storage may be disabled */ }
   }, []);
+  const firstList = useRef(false);
   useEffect(() => {
-    setIndex(i => tracks[i] ? i : Math.max(0, Math.min(initialIndex, tracks.length - 1)));
+    if (!tracks.length) {
+      firstList.current = false;
+      setIndex(0);
+      setPlaying(false);
+      playedRef.current = false;
+      return;
+    }
+    if (!firstList.current) {
+      firstList.current = true;
+      const i = Math.max(0, Math.min(initialIndex, tracks.length - 1));
+      indexRef.current = i;
+      setIndex(i);
+    } else if (indexRef.current >= tracks.length) {
+      // If the active item was deleted, never keep playing a stale YouTube URL.
+      player.current?.pauseVideo();
+      playedRef.current = false;
+      setPlaying(false);
+      indexRef.current = 0;
+      setIndex(0);
+    }
   }, [tracks, initialIndex]);
   useEffect(() => { player.current?.setVolume(volume); }, [volume]);
 
@@ -138,6 +158,22 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
     else if (!playedRef.current) startAt(indexRef.current);
     else { player.current.setVolume(volumeRef.current); player.current.playVideo(); setPlaying(true); }
   };
+  // Commands from the embedded ASHLINE settings screen. The game continues
+  // to edit/save its own playlist; only playback is delegated to this player.
+  useEffect(() => {
+    const onControl = (event: Event) => {
+      const detail = (event as CustomEvent<{ action?: string; index?: number }>).detail;
+      if (!detail) return;
+      if (detail.action === 'toggle') toggle();
+      else if (detail.action === 'next') next();
+      else if (detail.action === 'prev') startAt(indexRef.current - 1);
+      else if (detail.action === 'select' && Number.isInteger(detail.index)) startAt(detail.index!);
+      else if (detail.action === 'open') setOpen(o => !o);
+    };
+    window.addEventListener('ashline-bgm-control', onControl);
+    return () => window.removeEventListener('ashline-bgm-control', onControl);
+  });
+
   const changeVolume = (v: number) => {
     const safe = Math.max(0, Math.min(100, v));
     setVolume(safe);
