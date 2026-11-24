@@ -339,6 +339,7 @@ export default function AshlinePage() {
     <AshlineMusic tracks={music.tracks} initialIndex={music.index} footerMode />
     <iframe
       ref={frame}
+      data-radio-home={currentHomeId() || undefined}
       src="/ashline/chapter.html"
       title="ASHLINE - 끝에서 시작한 기록"
       onLoad={() => {

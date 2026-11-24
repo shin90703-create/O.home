@@ -93,3 +93,47 @@
               });
               refreshGoal();
             })();
+(() => {
+  const style = document.createElement('style');
+  style.textContent = `
+    [data-radio-unread]{position:relative;overflow:visible}
+    [data-radio-unread]::after{content:'';position:absolute;right:1px;top:1px;width:7px;height:7px;border-radius:50%;background:#ff956e;box-shadow:0 0 0 1.5px #14212a;pointer-events:none}
+  `;
+  document.head.append(style);
+  let cachedKey = '', cache = null;
+  function update() {
+    const home = window.frameElement?.dataset.radioHome;
+    if (!ashlineConnected || !home || !ashlineSlot) return;
+    const key = 'ashline.radio.read.v1.' + encodeURIComponent(home) + '.' + ashlineSlot;
+    if (key !== cachedKey) { cachedKey = key; cache = null; }
+    try { cache = localStorage.getItem(key) ?? cache; } catch {}
+    let read;
+    try { read = new Set(JSON.parse(cache)); } catch { read = new Set(); }
+    const partner = ashlineSlot === 'A' ? 'B' : 'A';
+    const messages = state.messages.filter(m => m.from === partner && m.id != null);
+    const unread = new Set(), kept = [];
+    for (const m of messages) {
+      const id = String(m.id);
+      const viewing = !document.hidden && ui.radio && !ui.radioMin && ui.radioTab === m.channel;
+      if (cache === null || read.has(id) || viewing) kept.push(id);
+      else unread.add(m.channel);
+    }
+    const next = JSON.stringify(kept);
+    if (cache !== next) {
+      cache = next;
+      try { localStorage.setItem(key,next); } catch {}
+    }
+    for (const button of document.querySelectorAll('[data-action="radio"],[data-action="missionRadio"],[data-radiotab]')) {
+      const channel = button.dataset.radiotab || (button.dataset.action === 'missionRadio' ? 'mission' : '');
+      const active = channel ? unread.has(channel) : unread.size > 0;
+      button.toggleAttribute('data-radio-unread',active);
+      const label = button.dataset.radioLabel || button.getAttribute('aria-label') || button.title || button.textContent.trim();
+      button.dataset.radioLabel = label;
+      button.setAttribute('aria-label',label + (active ? ' · 새 무전 있음' : ''));
+    }
+  }
+  const renderGame = render;
+  render = function() { renderGame(); update(); };
+  document.addEventListener('visibilitychange',update);
+  window.addEventListener('storage', event => { if (event.key === cachedKey) update(); });
+})();
