@@ -303,6 +303,21 @@ export default function AshlinePage() {
               color:#fff;opacity:.8;letter-spacing:.04em;text-shadow:0 1px 16px #050b12;
             }
             @media(max-width:700px) {.survivor-tile .tile-name-vertical::after {font-size:24px}}
+            /* ASHLINE's own roleplay screen: collapse its actual room list. */
+            .role-layout > section.panel.ash-rp-list-collapsed > .panel-body{display:none!important}
+            .role-layout > section.panel.ash-rp-list-collapsed{align-self:start!important}
+            .role-layout > section.panel > .panel-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+            .role-layout > section.panel .ash-rp-list-toggle{
+              margin-left:auto;flex-shrink:0;border:1px solid #46616d;border-radius:6px;
+              background:#142835;color:#cbdde3;padding:7px 11px;font:12px inherit;
+              cursor:pointer;white-space:nowrap
+            }
+            .role-layout > section.panel .ash-rp-list-toggle:hover{background:#1c3945}
+            /* The real music is controlled by the O.HOME player above the iframe. */
+            #bgmMount,.footer .itemfoot:has(> .bgm-block){display:none!important}
+            @media(min-width:900px){
+              .role-layout:has(> section.ash-rp-list-collapsed){grid-template-columns:minmax(185px,210px) minmax(0,1fr)!important}
+            }
           `;
           doc.head.appendChild(style);
         }
@@ -361,6 +376,57 @@ export default function AshlinePage() {
           `;
           doc.body.appendChild(script);
         }
+        // The ASHLINE HTML game recreates its own room-list DOM on each render.
+        // Keep the collapse state outside that DOM so it survives every message.
+        let rpRoomsCollapsed = true;
+        const updateRpList = () => {
+          const list = doc.querySelector<HTMLElement>('.role-layout');
+          const panel = list?.querySelector<HTMLElement>(':scope > section.panel:first-child');
+          const header = panel?.querySelector<HTMLElement>(':scope > .panel-head');
+          const body = panel?.querySelector<HTMLElement>(':scope > .panel-body');
+          if (!panel || !header || !body) return;
+          if (panel.classList.contains('ash-rp-list-collapsed') !== rpRoomsCollapsed)
+            panel.classList.toggle('ash-rp-list-collapsed', rpRoomsCollapsed);
+          if (!body.id) body.id = 'ashline-rp-rooms-body';
+          let button = header.querySelector<HTMLButtonElement>('.ash-rp-list-toggle');
+          if (!button) {
+            button = doc.createElement('button');
+            button.type = 'button';
+            button.className = 'ash-rp-list-toggle';
+            button.setAttribute('aria-controls', 'ashline-rp-rooms-body');
+            button.addEventListener('click', (e) => {
+              e.preventDefault();
+              rpRoomsCollapsed = !rpRoomsCollapsed;
+              updateRpList();
+            });
+            header.appendChild(button);
+          }
+          const title = rpRoomsCollapsed ? '목록 펼치기 ▾' : '목록 접기 ▴';
+          if (button.textContent !== title) button.textContent = title;
+          button.setAttribute('aria-expanded', String(!rpRoomsCollapsed));
+        };
+        const rpListObserver = new MutationObserver(updateRpList);
+        rpListObserver.observe(doc.body, { childList: true, subtree: true });
+        updateRpList();
+
+        // Intercept the old iframe's BGM controls before they instantiate a
+        // second, autoplaying YouTube embed. Keep its list editor intact.
+        const bgmActions = new Set(['bgmPlay', 'bgmSelect', 'bgmPrev', 'bgmNext', 'bgmDock']);
+        doc.addEventListener('click', event => {
+          const actionNode = (event.target as Element | null)?.closest?.<HTMLElement>('[data-action]');
+          const action = actionNode?.dataset.action;
+          if (!action) return;
+          if (action === 'newRoom' || action === 'openRoom') rpRoomsCollapsed = true;
+          if (!bgmActions.has(action) || !bgmLive.current.tracks.length) return;
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+          const index = actionNode?.dataset.id === undefined ? undefined : Number(actionNode.dataset.id);
+          window.dispatchEvent(new CustomEvent('ashline-bgm-control', {
+            detail: { action, index },
+          }));
+        }, true);
+        frame.current?.addEventListener('load', () => rpListObserver.disconnect(), { once: true });
         const setRomanNames = () => {
           doc.querySelectorAll<HTMLElement>('.survivor-tile').forEach(card => {
             const label = card.querySelector<HTMLElement>('.tile-name-vertical');
@@ -379,6 +445,7 @@ export default function AshlinePage() {
       }}
       style={{ display: 'block', width: '100%', height: '100%', minHeight: 0, border: 0 }}
     />
+    <AshlineMusic tracks={bgm.tracks} initialIndex={bgm.index} />
     {/* ASHLINE's existing upper-right radio indicator is replaced by an account control.
         The iframe is same-origin, but the account actions stay in the authenticated O.HOME shell. */}
     <div style={{ position: 'absolute', zIndex: 20, top: 16, right: 27 }}>
