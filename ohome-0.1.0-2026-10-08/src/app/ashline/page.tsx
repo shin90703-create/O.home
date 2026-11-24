@@ -153,6 +153,7 @@ export default function AshlinePage() {
       const url = await spectator.current.link();
       try {
         await navigator.clipboard.writeText(url);
+        setManualLink(url);
         setShareFeedback('관전 링크를 복사했어.');
       } catch {
         setManualLink(url);
