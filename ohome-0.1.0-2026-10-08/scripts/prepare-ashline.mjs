@@ -5,7 +5,24 @@ const [html,visibility,observer,player,lore,scroll] = await Promise.all(['index.
 // These handlers use the chapter's private state. Install them in its closure before startup.
 const marker = "if(!state.sites.length)buildSites();attach();render();";
 if (!html.includes(marker)) throw Error('ASHLINE chapter startup marker missing.');
-const inject = (source, hooks) => source.replace(marker, () => hooks+'\n'+marker);
-await writeFile(new URL('chapter.html',dir),inject(html,visibility+'\n'+player));
-const watch=inject(html,observer).replace("window.parent.postMessage({type:'ASHLINE_READY'},location.origin)",'void 0');
+const districtLandmarks = `
+Object.assign(LOCATIONS.station, {
+  name:'중앙로역 승강장',
+  desc:'물자국이 남은 1호선 승강장. 계단 위 노선도에서 판암 방면 화살표만은 아직 또렷하다.'
+});
+Object.assign(LOCATIONS.arcade, {
+  name:'은행동 상가',
+  desc:'빛이 꺼진 으능정이 거리. 빈 빵집 유리문에는 튀김소보로가 나오는 시간이 아직 붙어 있다.'
+});
+Object.assign(LOCATIONS.sewer, {
+  name:'목척교 배수로',
+  desc:'목척교 아래, 하천 옆에 자리 잡은 두 사람의 거점. 물이 잦아들면 건너편 중앙시장 쪽 셔터들이 보인다.'
+});
+`;
+const districtHtml = html
+  .replaceAll('대전 일반 생활권을 모티브로 제작한 가상 도시 지도.', '은행동과 목척교 일대를 모티브로 한 가상 생활권 지도.')
+  .replaceAll('<b>B-03 생활권</b></div>${mapPins()}', '<b>B-03 은행동 · 목척교</b></div>${mapPins()}');
+const inject = (source, hooks) => source.replace(marker, () => districtLandmarks+'\n'+hooks+'\n'+marker);
+await writeFile(new URL('chapter.html',dir),inject(districtHtml,visibility+'\n'+player));
+const watch=inject(districtHtml,observer).replace("window.parent.postMessage({type:'ASHLINE_READY'},location.origin)",'void 0');
 await writeFile(new URL('observer.html',dir),watch.replace('</head>',()=>'<style>'+scroll+'.sidebar{overflow-y:auto!important;min-height:0!important}</style></head>').replace('</body>',()=>'<script>'+lore+'</script></body>'));
