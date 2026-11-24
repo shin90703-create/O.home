@@ -20,21 +20,35 @@ import { HomeList } from './HomeList';
 function MemberHomePicker({ uid }: { uid: string }) {
   const [homes, setHomes] = useState<HomeRow[]>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   useEffect(() => {
     let alive = true;
-    backend()?.listHomes().then(rows => { if (alive) setHomes(rows); })
-      .catch(() => { if (alive) setError('자관 목록을 불러오지 못했습니다.'); });
+    setLoading(true);
+    setError('');
+    backend()?.listHomes().then(rows => {
+      if (alive) { setHomes(rows); setLoading(false); }
+    }).catch(e => {
+      if (alive) {
+        setLoading(false);
+        setError('자관 목록을 불러오지 못했습니다. ' + (e instanceof Error ? e.message : ''));
+      }
+    });
     return () => { alive = false; };
-  }, []);
+  }, [reloadKey]);
   return <div className="setup-wrap">
     <div className="panel setup-box wide" style={{ margin: 'auto' }}>
-      <h1 style={{ marginBottom: 14 }}>접속할 자관 선택</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 14 }}>
+        <h1 style={{ margin: 0 }}>접속할 자관 선택</h1>
+        <button type="button" className="btn btn-ghost" disabled={loading}
+          onClick={() => setReloadKey(v => v + 1)}>{loading ? '확인 중…' : '목록 새로고침'}</button>
+      </div>
       {error && <p className="setup-err">{error}</p>}
       <div style={{ display: 'grid', gap: 10 }}>
         {homes.map(h => <button key={h.id} className="btn btn-ghost" style={{ padding: 16, textAlign: 'left' }}
           onClick={() => enterMemberHome(uid, h.id)}>{h.name} →</button>)}
       </div>
-      {!homes.length && !error && <p className="hint">참여 중인 자관을 확인하고 있습니다.</p>}
+      {!homes.length && !error && <p className="hint">{loading ? '참여 중인 자관을 확인하고 있습니다.' : '연결된 자관이 없습니다. 관리자에게 회원 연결 상태를 확인해 주세요.'}</p>}
     </div>
   </div>;
 }
