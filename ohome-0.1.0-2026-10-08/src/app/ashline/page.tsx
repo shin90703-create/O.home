@@ -13,6 +13,7 @@ import { currentHomeId, leaveHome, chooseAnotherMemberHome } from '@/lib/home';
 import { serverConfig } from '@/lib/serverConfig';
 import { AshlineMusic, type AshlineTrack } from '@/components/ashline/AshlineMusic';
 
+import { spectatorPublisher } from '@/lib/ashlineSpectator';
 import { armMsgSound, playMsgTone, unlockMsgSound } from '@/lib/msgSound';
 
 type Slot = 'A' | 'B';
@@ -139,6 +140,29 @@ const MAX_UPLOAD = 4 * 1024 * 1024;
 
 export default function AshlinePage() {
   const { user, ready, mock } = useAuth();
+  const spectator = useRef<ReturnType<typeof spectatorPublisher> | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState('');
+  const [manualLink, setManualLink] = useState('');
+  async function copySpectatorLink() {
+    if (!spectator.current || sharing) return;
+    setSharing(true);
+    setShareFeedback('');
+    setManualLink('');
+    try {
+      const url = await spectator.current.link();
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareFeedback('관전 링크를 복사했어.');
+      } catch {
+        setManualLink(url);
+        setShareFeedback('아래 주소를 복사해 줘.');
+      }
+    } catch (error) {
+      const code = (error as {code?: string})?.code;
+      setShareFeedback(code === 'permission-denied' ? '첫 관전 링크는 총관리자가 만들어 줘야 해.' : '관전 링크를 준비하지 못했어. 연결과 공유 권한을 확인해 줘.');
+    } finally { setSharing(false); }
+  }
   const [accountOpen, setAccountOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [music, setMusic] = useState<MusicList>({ tracks: [], index: 0 });
@@ -313,6 +337,7 @@ export default function AshlinePage() {
         });
         if (disposed) return;
         slot.current = joined;
+        spectator.current = spectatorPublisher(db, home, joined);
         setStatus('ASHLINE 접속 완료');
         unsubscribe = onSnapshot(ref, { includeMetadataChanges: true }, snap => {
           if (!snap.exists() || disposed) return;
@@ -330,6 +355,7 @@ export default function AshlinePage() {
             previousPartnerEntries = entries;
             lastSoundRevision = world.revision;
           }
+          if (!snap.metadata.fromCache && !snap.metadata.hasPendingWrites) spectator.current?.update(world);
           latest.current = world;
           syncMusic(world.payload);
           if (resetPending) return;
@@ -357,6 +383,8 @@ export default function AshlinePage() {
     return () => {
       disposed = true;
       resetProgress.current = null;
+      spectator.current?.stop();
+      spectator.current = null;
       unsubscribe?.();
       window.removeEventListener('message', handleMessage);
     };
@@ -720,6 +748,9 @@ export default function AshlinePage() {
       {accountOpen && <div role="menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 10px)', minWidth: 166, borderRadius: 7, background: '#14232f', border: '1px solid #435766', boxShadow: '0 12px 28px #000a', padding: 5, color: '#e0e9ef' }}>
         <div style={{ padding: '6px 10px 8px', color: '#8da5b2', fontSize: 11 }}>{user.nickname}</div>
         <button role="menuitem" type="button" onClick={() => user.role === 'admin' ? leaveHome() : chooseAnotherMemberHome(user.id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px', color: '#e0e9ef', fontSize: 12 }}>자관 목록으로</button>
+        <button role="menuitem" type="button" disabled={sharing || !spectator.current} onClick={() => void copySpectatorLink()} style={{display:'block',width:'100%',textAlign:'left',padding:'10px',color:'#c6e7e5',fontSize:12}}>{sharing ? '링크 준비 중…' : '관전 링크 복사'}</button>
+        {shareFeedback && <div role="status" style={{fontSize:12,padding:'2px 10px 6px'}}>{shareFeedback}</div>}
+        {manualLink && <input aria-label="관전 주소" readOnly value={manualLink} onFocus={e=>e.target.select()} style={{width:'100%'}} />}
         <button role="menuitem" type="button" disabled={resetting || !slot.current} onClick={() => void resetProgress.current?.()} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px', color: '#ffc0b8', fontSize: 12 }}>{resetting ? '초기화 중…' : '진행상황 초기화'}</button>
       </div>}
     </div>
