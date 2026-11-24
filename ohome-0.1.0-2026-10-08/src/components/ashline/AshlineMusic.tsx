@@ -23,11 +23,12 @@ type YTApi = {
 type YTWindow = Window & { YT?: YTApi; onYouTubeIframeAPIReady?: () => void };
 const VOLUME_KEY = 'ashline.bgm.volume.v1';
 
-export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[]; initialIndex: number }) {
+export function AshlineMusic({ tracks, initialIndex, footerMode = false }: { tracks: AshlineTrack[]; initialIndex: number; footerMode?: boolean }) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
   const [folded, setFolded] = useState(false);
   const [volume, setVolume] = useState(60);
   const holder = useRef<HTMLDivElement>(null);
@@ -208,16 +209,28 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
     return () => window.removeEventListener('ashline-bgm-control', receive);
   }, []);
 
+  // The game's own footer presents the transport buttons. Keep the playback
+  // engine in O.HOME and broadcast its true status so the footer remains in sync.
+  useEffect(() => {
+    const current = tracks[index] ?? tracks[0];
+    window.dispatchEvent(new CustomEvent('ashline-bgm-status', {
+      detail: { playing, title: current?.title ?? '', ready },
+    }));
+  }, [tracks, index, playing, ready]);
+
   if (!tracks.length) return null;
   const track = tracks[index] ?? tracks[0];
 
   return (
-    <div className={`bgm ${folded ? 'folded' : ''}`}
-      style={{ bottom: 69, zIndex: 85 }}
-      onClick={() => { if (folded) setFolded(false); }}>
-      <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}>
+    <>
+      {/* Never unmount the IFrame API holder when the footer popup closes. */}
+      <div aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}>
         <div ref={holder} />
       </div>
+      {(!footerMode || open) && (
+      <div className={`bgm ${footerMode ? 'ashline-bgm-footer-popup' : folded ? 'folded' : ''}`}
+        style={{ bottom: 69, zIndex: 85 }}
+        onClick={() => { if (!footerMode && folded) setFolded(false); }}>
       <div className="disc" style={{ animationPlayState: playing ? 'running' : 'paused' }} />
       <div className="title">
         <div className="mq tt" title={track.title} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.title}</div>
@@ -227,7 +240,7 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
         <button title="이전 곡" onClick={e => { e.stopPropagation(); startAt(indexRef.current - 1); }}>◂◂</button>
         <button title={playing ? '일시정지' : '재생'} onClick={e => { e.stopPropagation(); toggle(); }}>{playing ? '❚❚' : '▶'}</button>
         <button title="다음 곡" onClick={e => { e.stopPropagation(); next(); }}>▸▸</button>
-        <button className="lst" title="곡 목록" onClick={e => { e.stopPropagation(); setOpen(v => !v); }}>☷</button>
+        <button className="lst" title="곡 목록" onClick={e => { e.stopPropagation(); footerMode ? setListOpen(v => !v) : setOpen(v => !v); }}>☷</button>
       </div>
       <div className="vol" title={`볼륨 ${volume}%`}
         onPointerDown={e => {
@@ -243,16 +256,20 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
         }}>
         <i style={{ width: `${volume}%` }} />
       </div>
-      <button className="fold-btn" title="접기" onClick={e => { e.stopPropagation(); setOpen(false); setFolded(true); }}>»</button>
-      {open && (
+      {footerMode ? (
+        <button className="fold-btn" aria-label="BGM 상세 닫기" title="닫기" onClick={e => { e.stopPropagation(); setListOpen(false); setOpen(false); }}>×</button>
+      ) : (
+        <button className="fold-btn" title="접기" onClick={e => { e.stopPropagation(); setOpen(false); setFolded(true); }}>»</button>
+      )}
+      {(footerMode ? listOpen : open) && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: -1 }} onClick={() => setOpen(false)} />
+          {!footerMode && <div style={{ position: 'fixed', inset: 0, zIndex: -1 }} onClick={() => setOpen(false)} />}
           <div className="bgm-list on">
             <div className="h">ASHLINE BGM LIST</div>
             <div className="tracks">
               {tracks.map((t, i) => (
                 <div className={`it ${i === index ? 'on' : ''}`} key={t.kind + ':' + t.ytid + ':' + i}
-                  onClick={e => { e.stopPropagation(); startAt(i); setOpen(false); }}>
+                  onClick={e => { e.stopPropagation(); startAt(i); setListOpen(false); if (!footerMode) setOpen(false); }}>
                   <b>{t.title}</b><small>{t.kind === 'list' ? 'YouTube Playlist' : 'YouTube Video'}</small>
                 </div>
               ))}
@@ -260,6 +277,30 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
           </div>
         </>
       )}
-    </div>
+      </div>
+      )}
+      {footerMode && <style>{`
+        .ashline-bgm-footer-popup {
+          position: fixed !important; right: 12px !important; left: auto !important;
+          bottom: 70px !important; max-width: calc(100vw - 24px) !important;
+          width: auto !important; display: flex !important; flex-wrap: wrap !important;
+          border-radius: 12px !important; background: #10222d !important;
+          border: 1px solid #557780 !important; box-shadow: 0 12px 40px #000a !important;
+        }
+        .ashline-bgm-footer-popup .title {max-width: 130px}
+        .ashline-bgm-footer-popup .vol {min-width: 72px}
+        .ashline-bgm-footer-popup .bgm-list {max-height: min(48vh, 350px);overflow-y: auto}
+        @media (max-width:780px) {
+          .ashline-bgm-footer-popup {
+            bottom: 103px !important; right: 8px !important;
+            max-width: calc(100vw - 16px) !important;
+            padding: 8px !important; gap: 7px !important;
+          }
+          .ashline-bgm-footer-popup .disc {display:none !important}
+          .ashline-bgm-footer-popup .title {max-width: 100px !important}
+          .ashline-bgm-footer-popup .vol {min-width: 58px !important}
+        }
+      `}</style>}
+    </>
   );
 }
