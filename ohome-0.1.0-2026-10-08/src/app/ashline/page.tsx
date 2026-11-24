@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth';
 import { backend, isServerMode } from '@/lib/backend';
 import { currentHomeId, leaveHome, chooseAnotherMemberHome } from '@/lib/home';
 import { serverConfig } from '@/lib/serverConfig';
+import { AshlineMusic, type AshlineTrack } from '@/components/ashline/AshlineMusic';
 
 type Slot = 'A' | 'B';
 type World = {
@@ -30,6 +31,23 @@ type IframeMsg = {
 const MAX_STATE_CHARS = 700_000;
 const MAX_UPLOAD = 4 * 1024 * 1024;
 
+type SharedBgm = { tracks: AshlineTrack[]; index: number };
+function readSharedBgm(payload: Record<string, unknown> | null): SharedBgm {
+  const source = payload?.bgm;
+  const raw = source && typeof source === 'object' ? source as Record<string, unknown> : {};
+  const tracks: AshlineTrack[] = Array.isArray(raw.tracks)
+    ? raw.tracks.slice(0, 150).flatMap((item: unknown) => {
+      if (!item || typeof item !== 'object') return [];
+      const t = item as Record<string, unknown>;
+      const ytid = typeof t.ytid === 'string' ? t.ytid : '';
+      if (!/^[A-Za-z0-9_-]{8,100}$/.test(ytid)) return [];
+      return [{ title: typeof t.title === 'string' ? t.title : 'YouTube BGM',
+        ytid, kind: t.kind === 'list' ? 'list' as const : 'video' as const }];
+    }) : [];
+  const requested = typeof raw.index === 'number' && Number.isFinite(raw.index) ? Math.floor(raw.index) : 0;
+  return { tracks, index: Math.max(0, Math.min(tracks.length - 1, requested)) };
+}
+
 export default function AshlinePage() {
   const { user, ready, mock } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
@@ -43,6 +61,13 @@ export default function AshlinePage() {
   const writeInProgress = useRef(false);
   const [status, setStatus] = useState('ASHLINE 접속을 확인하는 중');
   const [failed, setFailed] = useState<string | null>(null);
+  const [bgm, setBgm] = useState<SharedBgm>({ tracks: [], index: 0 });
+  const bgmLive = useRef<SharedBgm>({ tracks: [], index: 0 });
+  const acceptBgm = (payload: Record<string, unknown> | null) => {
+    const next = readSharedBgm(payload);
+    bgmLive.current = next;
+    setBgm(next);
+  };
   const uid = user?.id;
 
   useEffect(() => {
@@ -131,6 +156,7 @@ export default function AshlinePage() {
         }
         return;
       }
+      if (msg.type === 'ASHLINE_WRITE' && msg.payload) acceptBgm(msg.payload);
       if (msg.type !== 'ASHLINE_WRITE' || !msg.payload || writeInProgress.current) return;
       // Firestore counts UTF-8 bytes, not JavaScript string characters.
       // Keep a conservative margin for document keys, metadata and future schema additions.
@@ -201,6 +227,7 @@ export default function AshlinePage() {
           if (!snap.exists() || disposed) return;
           const world = snap.data() as World;
           latest.current = world;
+          acceptBgm(world.payload);
           if (resetPending) return;
           if (frame.current?.dataset.initialized && world.payload === null && world.revision > rev.current && !snap.metadata.hasPendingWrites) {
             window.location.reload();
