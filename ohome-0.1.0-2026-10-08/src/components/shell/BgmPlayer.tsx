@@ -3,6 +3,7 @@
 // 기본 위치 오른쪽 아래 · 곡 리스트 팝업 (v1.9) · 페이지 이동에도 유지(레이아웃 상주)
 // 브라우저 정책상 소리 재생은 사용자의 첫 클릭부터 시작
 import React, { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useBgm, BgmTrack, MAIN_LIST } from '@/lib/bgmStore';
 
 const LIST_PICK_KEY = 'ohome.bgm.list';   // 이 브라우저에서 고른 플레이리스트 (방문자별)
@@ -62,6 +63,7 @@ const ListIcon = () => (
 );
 
 export function BgmPlayer() {
+  const pathname = usePathname();
   const { state, lists, tracksOf } = useBgm();
   const { settings } = state;
   /* 플레이리스트 여러 개 (커플홈 사용자 요청) — 지금 듣는 목록은 방문자별로 기억, 처음에는 관리자가 정한 defList */
@@ -109,7 +111,7 @@ export function BgmPlayer() {
 
   // YT API 로드 + 플레이어 생성
   useEffect(() => {
-    if (!settings.enabled || tracks.length === 0) return;
+    if (pathname === '/ashline' || !settings.enabled || tracks.length === 0) return;
     let cancelled = false;
     const create = () => {
       if (cancelled || !holderRef.current || playerRef.current) return;
@@ -163,7 +165,7 @@ export function BgmPlayer() {
       playerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.enabled, tracks.length > 0]);
+  }, [pathname, settings.enabled, tracks.length > 0]);
 
   const playAt = (i: number, list: BgmTrack[] = tracks) => {
     const t = list[i];
@@ -204,7 +206,7 @@ export function BgmPlayer() {
   playingRef.current = playing;
   const armedRef = useRef(false);
   useEffect(() => {
-    if (!settings.autoplay || !settings.enabled || tracks.length === 0) return;
+    if (pathname === '/ashline' || !settings.autoplay || !settings.enabled || tracks.length === 0) return;
     const fire = (ev: Event) => {
       remove();
       // 플레이어 자체를 조작하는 클릭(재생/이전/다음 등)은 버튼 핸들러에 맡김 —
@@ -227,7 +229,7 @@ export function BgmPlayer() {
     window.addEventListener('keydown', fire, true);
     return remove;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.autoplay, settings.enabled, tracks.length]);
+  }, [pathname, settings.autoplay, settings.enabled, tracks.length]);
 
   const prev = () => playAt((idxRef.current - 1 + tracks.length) % tracks.length);
 
@@ -273,7 +275,7 @@ export function BgmPlayer() {
     window.addEventListener('pointerup', up);
   };
 
-  if (!settings.enabled || !anyTracks) return null;
+  if (pathname === '/ashline' || !settings.enabled || !anyTracks) return null;
 
   return (
     <div
