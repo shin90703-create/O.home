@@ -272,7 +272,7 @@ export default function AshlinePage() {
     </div>;
   }
   return <section style={{ position: 'relative', width: '100%', height: '100%', minHeight: 0, overflow: 'hidden', background: '#090e15', color: '#d4dce6' }}>
-    <AshlineMusic tracks={music.tracks} initialIndex={music.index} />
+    <AshlineMusic tracks={music.tracks} initialIndex={music.index} footerMode />
     <iframe
       ref={frame}
       src="/ashline/index.html"
@@ -287,10 +287,50 @@ export default function AshlinePage() {
           style.id = 'ohome-ashline-card-fix';
           style.textContent = `
             .sidebar {overflow-y:auto !important;min-height:0 !important;overscroll-behavior:contain;scrollbar-width:thin}
-            /* Only replace the old playback, never the soundtrack editor. */
-            #bgmMount, .footer .bgm-block {display:none !important}
-            .footer .itemfoot:has(.bgm-block) {display:none !important}
-            .settings-layout [data-action="bgmPlay"] {display:none !important}
+            /* Use the game's own footer for controls. Playback is still handled
+               by the persistent parent YouTube API player. */
+            #bgmMount {display:none!important}
+            .footer .itemfoot:has(> .bgm-block) {display:flex!important;min-width:0!important;padding:5px 10px!important}
+            .footer .bgm-block {display:flex!important;align-items:center;min-width:0!important;gap:5px!important}
+            .footer .bgm-block .bgm-button {
+              border:1px solid transparent!important;text-decoration:none!important;
+              display:inline-flex!important;align-items:center;justify-content:center;
+              border-radius:5px;min-width:30px;height:32px;padding:4px 6px!important;
+              font:12px Consolas,monospace!important;color:#c5e4de!important;
+              background:transparent!important;cursor:pointer
+            }
+            .footer .bgm-block .bgm-button:hover,.footer .bgm-block .bgm-button:focus-visible {
+              border-color:#617d88!important;background:#213946!important
+            }
+            .footer .bgm-block .bgm-title {
+              display:block!important;min-width:0!important;max-width:170px!important;
+              overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;
+              font:11px Consolas,monospace!important
+            }
+            @media(max-width:780px) {
+              :root {--b:94px!important}
+              .footer {height:94px!important;flex-wrap:wrap!important;align-content:stretch!important}
+              .footer .itemfoot:not(.mob-hide):not(:has(> .bgm-block)) {
+                height:42px!important;padding:4px 8px!important
+              }
+              .footer .itemfoot.end {order:2!important;margin-left:auto!important;border:0!important}
+              .footer .itemfoot:has(> .bgm-block) {
+                order:3!important;width:100%!important;flex:0 0 100%!important;
+                height:52px!important;padding:4px 10px!important;
+                border-top:1px solid #344d57!important;border-right:0!important
+              }
+              .footer .bgm-block {width:100%!important;gap:8px!important}
+              .footer .bgm-block .bgm-title {
+                flex:1!important;max-width:none!important;justify-content:flex-start!important
+              }
+              .footer .bgm-block .bgm-button {height:34px!important;min-width:34px!important}
+            }
+            @media(max-width:390px) {
+              .footer .itemfoot:not(.mob-hide):not(:has(> .bgm-block)) {padding:4px 5px!important}
+              .footer .itemfoot.end #clock {display:none!important}
+              .footer .bgm-block {gap:5px!important}
+              .footer .bgm-block .bgm-button {min-width:32px!important}
+            }
             .survivor-tile .tile-name-vertical {
               top:auto !important;bottom:15% !important;
               left:auto !important;right:0 !important;
@@ -318,8 +358,8 @@ export default function AshlinePage() {
               cursor:pointer;white-space:nowrap
             }
             .role-layout > section.panel .ash-rp-list-toggle:hover{background:#1c3945}
-            /* The real music is controlled by the O.HOME player above the iframe. */
-            #bgmMount,.footer .itemfoot:has(> .bgm-block){display:none!important}
+            /* The legacy YouTube dock is disabled; the footer controls are visible. */
+            #bgmMount {display:none!important}
             @media(min-width:900px){
               .role-layout:has(> section.ash-rp-list-collapsed){grid-template-columns:minmax(185px,210px) minmax(0,1fr)!important}
             }
@@ -445,11 +485,41 @@ export default function AshlinePage() {
             dock.dataset.src = '';
           }
         };
-        const bgmObserver = new MutationObserver(removeLegacyAudio);
+        // The embedded game re-renders its footer. Reflect the actual parent
+        // player state after each render so play/pause never shows a stale icon.
+        const footerBgm = { playing: false, title: '' };
+        const syncFooterBgm = () => {
+          const play = doc.querySelector<HTMLButtonElement>('.footer .bgm-block [data-action="bgmPlay"]');
+          if (play) {
+            const icon = footerBgm.playing ? '❚❚' : '▶';
+            if (play.textContent !== icon) play.textContent = icon;
+            play.setAttribute('aria-label', footerBgm.playing ? '음악 일시정지' : '음악 재생');
+          }
+          const title = doc.querySelector<HTMLButtonElement>('.footer .bgm-block [data-action="bgmDock"]');
+          if (title && footerBgm.title) {
+            const label = '♫ ' + footerBgm.title;
+            if (title.textContent !== label) title.textContent = label;
+            title.title = footerBgm.title + ' · 목록 및 볼륨';
+          }
+        };
+        const onBgmStatus = (event: Event) => {
+          const status = (event as CustomEvent<{ playing?: boolean; title?: string }>).detail;
+          if (!status) return;
+          footerBgm.playing = !!status.playing;
+          footerBgm.title = typeof status.title === 'string' ? status.title : '';
+          syncFooterBgm();
+        };
+        window.addEventListener('ashline-bgm-status', onBgmStatus);
+        const bgmObserver = new MutationObserver(() => {
+          removeLegacyAudio();
+          syncFooterBgm();
+        });
         bgmObserver.observe(doc.body, { childList: true, subtree: true });
         removeLegacyAudio();
+        syncFooterBgm();
         frame.current?.addEventListener('load', () => {
           doc.removeEventListener('click', passMusicClick, true);
+          window.removeEventListener('ashline-bgm-status', onBgmStatus);
           bgmObserver.disconnect();
         }, { once: true });
         const setRomanNames = () => {
