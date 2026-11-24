@@ -325,10 +325,19 @@ export async function createFirebaseBackend(cfg: FirebaseCfg): Promise<Backend> 
         return snap.docs.map(d => rowOf(d.id, d.data() as Record<string, unknown>))
           .sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
       }
-      // 회원은 자신에게 연결된 자관만 문서 단위로 조회한다 (전체 homes 조회 금지).
-      const me = auth.currentUser ? await toUser(auth.currentUser) : null;
-      const ids = me?.homeIds ?? (me?.homeId ? [me.homeId] : []);
-      const snaps = await Promise.all(ids.map(id => getDoc(doc(db, 'homes', id))));
+      // 회원이 다른 자관에 접속해 있는 사이 관리자가 추가 연결할 수 있다.
+      // 이 목록만큼은 예전 프로필 캐시가 아니라 서버의 최신 homeIds를 기준으로 조회한다.
+      const uid = auth.currentUser?.uid;
+      if (!uid) return [];
+      const profile = await fsMod.getDocFromServer(doc(db, 'profiles', uid));
+      const data = profile.exists()
+        ? profile.data() as { homeId?: string; homeIds?: string[] }
+        : null;
+      const ids = [...new Set([
+        ...(data?.homeId ? [data.homeId] : []),
+        ...(Array.isArray(data?.homeIds) ? data.homeIds : []),
+      ])];
+      const snaps = await Promise.all(ids.map(id => fsMod.getDocFromServer(doc(db, 'homes', id))));
       return snaps.filter(s => s.exists())
         .map(s => rowOf(s.id, s.data() as Record<string, unknown>))
         .sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
