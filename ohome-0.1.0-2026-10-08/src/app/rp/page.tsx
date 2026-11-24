@@ -73,8 +73,6 @@ export default function RpPage() {
   const [fStatus, setFStatus] = useState<'all' | 'ongoing' | 'done'>('ongoing'); // 우측 상태 필터 — 진행중이 기본
   // 모바일 (v1.9 사용자 확정) — 방 목록은 위에 접힌 바로, 입력창 포커스 중엔 역극 영역만 표시
   const [mListOpen, setMListOpen] = useState(false);
-  // PC: 목록을 기본으로 접어 역극 대화를 넓게 보여 준다. 모바일은 기존 위쪽 접힘 바를 사용.
-  const [roomsCollapsed, setRoomsCollapsed] = useState(true);
   const [mFocus, setMFocus] = useState(false);
 
   // 참여자에게만 존재 노출 (확정 — 관리자도 비참여 방은 보지 않음)
@@ -322,8 +320,6 @@ export default function RpPage() {
     };
     setRooms([room, ...rooms]);
     setSelId(room.id);
-    setMListOpen(false);
-    setRoomsCollapsed(true);
     setNewOpen(false);
     setNTitle(''); setNRel('none'); setNMembers([]); setNStyle('script');
   };
@@ -449,28 +445,17 @@ export default function RpPage() {
         <EditableDesc k="rp-desc" def="실시간 채팅형 · 참여자에게만 존재 노출 · 캐릭터 선택 발화" />
       </div>
 
-      <div className={`rp-layout ${mListOpen ? 'mopen' : ''} ${roomsCollapsed ? 'rooms-collapsed' : ''}`}>
+      <div className={`rp-layout ${mListOpen ? 'mopen' : ''}`}>
         {/* 모바일 전용 접힘 바 — 탭하면 방 목록·상태 필터가 펼쳐짐 (v1.9) */}
-        <button type="button" className="rp-mfold" aria-expanded={mListOpen}
-          aria-controls="rp-rooms-list" aria-label={mListOpen ? '역극 목록 접기' : '역극 목록 펼치기'}
-          onClick={() => setMListOpen(o => !o)}>
-          {/* 방이 없어도 목록을 접고 펼칠 수 있다. 선택한 방 제목은 접힌 바에 표시. */}
-          <b>{sel ? sel.title : '역극 목록'}{sel && <span className="rl"> · {roomLabel(sel)}</span>}</b>
-          <small>{mListOpen ? '목록 접기 ▲' : '목록 펼치기 ▼'} · {myRooms.length}</small>
+        <button type="button" className="rp-mfold" onClick={() => setMListOpen(o => !o)}>
+          {/* 모바일에선 채팅 머리(제목·캐릭터명·버튼들)를 숨기므로 여기에 캐릭터 이름까지 (사용자 확정) */}
+          <b>{sel ? sel.title : '방 목록'}{sel && <span className="rl"> · {roomLabel(sel)}</span>}</b>
+          <small>MY ROOMS {myRooms.length} {mListOpen ? '▴' : '▾'}</small>
         </button>
         {/* 방 목록 — 내 참여 방만 · 헤더 고정, 리스트만 내부 스크롤 */}
         <div className="panel rp-rooms">
-          {/* PC에서 접은 상태에는 얇은 탭만 남겨 대화창 폭을 확보한다. */}
-          <button type="button" className="rp-rooms-compact" aria-label="역극 목록 펼치기"
-            aria-expanded={false} title="역극 목록 펼치기" onClick={() => setRoomsCollapsed(false)}>
-            <span aria-hidden="true">☰</span><small>목록</small><small>{myRooms.length}</small>
-          </button>
-          <div className="rp-rooms-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 6px 12px', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <button type="button" className="rp-rooms-hide" aria-label="역극 목록 접기"
-                title="역극 목록 접기" onClick={() => setRoomsCollapsed(true)}>‹</button>
-              <b style={{ fontSize: 12, letterSpacing: '.1em', color: 'var(--sub)' }}>MY ROOMS</b>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 6px 12px', flexShrink: 0 }}>
+            <b style={{ fontSize: 12, letterSpacing: '.1em', color: 'var(--sub)' }}>MY ROOMS</b>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               {/* 메시지 알림음 (커플홈) — 남의 새 발화가 오면 짧게 울린다. 브라우저마다 켜고 끈다 */}
               <button className={`btn btn-ghost rp-bell${soundOn ? '' : ' off'}`} data-tip={soundOn ? '알림음 끄기' : '알림음 켜기'}
@@ -483,10 +468,10 @@ export default function RpPage() {
                 }}>＋ NEW ROOM</button>
             </div>
           </div>
-          <div className="rp-rooms-list" id="rp-rooms-list">
+          <div className="rp-rooms-list">
             {myRooms.map(r => (
               <div key={r.id} className={`rp-room ${sel?.id === r.id ? 'on' : ''}`}
-                onClick={() => { setSelId(r.id); setMListOpen(false); setRoomsCollapsed(true); }}>
+                onClick={() => { setSelId(r.id); setMListOpen(false); }}>
                 <b>{r.title} {rpHasNew(r, user.id, msgsOf(r)) && sel?.id !== r.id && <span className="new">N</span>}</b>
                 <small>{roomSub(r)}</small>
               </div>
