@@ -20,6 +20,11 @@ Object.assign(LOCATIONS.sewer, {
 });
 `;
 const districtHtml = html
+  .replace(/const WEATHER_ENDPOINT='[^']+';/, "const WEATHER_ENDPOINT='/api/ashline/weather';")
+  .replaceAll('· Open-Meteo','· 기상청 관측')
+  .replace('weatherLive.condition=wmoName(weatherLive.code);','weatherLive.condition=current.condition;')
+  .replace('weatherLive.updated=Date.now();','weatherLive.updated=current.observedAt;')
+  .replaceAll('마지막 수신','관측 시각')
   .replaceAll('대전 일반 생활권을 모티브로 제작한 가상 도시 지도.', '은행동과 목척교 일대를 모티브로 한 가상 생활권 지도.')
   .replaceAll('<b>B-03 생활권</b></div>${mapPins()}', '<b>B-03 은행동 · 목척교</b></div>${mapPins()}');
 const inject = (source, hooks) => source.replace(marker, () => districtLandmarks+'\n'+hooks+'\n'+marker);
