@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { backend, isServerMode } from './backend';
 import { setCurrentUserId } from './currentUser';
+import { chooseAnotherMemberHome } from './home';
 import { getSetting, setSetting } from './settingStore';
 
 export type Role = 'admin' | 'member' | 'guest';
@@ -123,8 +124,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (server && be) {
       const r = await be.signIn(id.trim(), password);
       if (!r.ok) return { ok: false, error: r.error ?? '로그인에 실패했습니다.' };
-      // 홈(자관)은 부팅 때 사용자를 보고 정해진다 (v2.1) — 로그인했으니 처음부터 다시 연다
-      window.location.href = '/';
+      // 로그인 직후에는 기존 자관 선택을 재사용하지 않고 Relation List를 보여준다.
+      // 관리자는 자신의 목록으로, 회원은 연결된 자관 전체가 표시되는 목록으로 이동.
+      const loggedIn = await be.currentUser().catch(() => null);
+      if (loggedIn?.role === 'member') {
+        chooseAnotherMemberHome(loggedIn.id);
+      } else {
+        window.location.href = '/';
+      }
       return { ok: true };
     }
     const acc = mockRegistry()[id] ?? (isSetupDone() ? undefined : MOCK_ACCOUNTS[id]);
