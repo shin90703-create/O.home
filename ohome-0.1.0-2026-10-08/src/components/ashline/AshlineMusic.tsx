@@ -86,8 +86,10 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
       return;
     }
     try {
-      if (track.kind === 'list') player.current.loadPlaylist?.({ listType: 'playlist', list: track.ytid, index: 0 });
-      else player.current.loadVideoById(track.ytid);
+      if (track.kind === 'list') {
+        if (!player.current.loadPlaylist) throw new Error('YouTube playlist control unavailable');
+        player.current.loadPlaylist({ listType: 'playlist', list: track.ytid, index: 0 });
+      } else player.current.loadVideoById(track.ytid);
       player.current.setVolume(volumeRef.current);
       player.current.playVideo();
       playedRef.current = true;
@@ -119,7 +121,12 @@ export function AshlineMusic({ tracks, initialIndex }: { tracks: AshlineTrack[];
           },
           onStateChange: (event: { data: number }) => {
             if (cancelled) return;
-            if (event.data === 0) nextRef.current();
+            if (event.data === 0) {
+              // YouTube advances individual videos inside a playlist itself;
+              // jumping here would skip the rest of the shared playlist.
+              if (tracksRef.current[indexRef.current]?.kind !== 'list') nextRef.current();
+              else setPlaying(false);
+            }
             else if (event.data === 1) { playedRef.current = true; setPlaying(true); }
             else if (event.data === 2 || event.data === -1) setPlaying(false);
           },
