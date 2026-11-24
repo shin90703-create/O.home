@@ -322,6 +322,8 @@ export default function RpPage() {
     };
     setRooms([room, ...rooms]);
     setSelId(room.id);
+    setMListOpen(false);
+    setRoomsCollapsed(true);
     setNewOpen(false);
     setNTitle(''); setNRel('none'); setNMembers([]); setNStyle('script');
   };
@@ -449,10 +451,12 @@ export default function RpPage() {
 
       <div className={`rp-layout ${mListOpen ? 'mopen' : ''} ${roomsCollapsed ? 'rooms-collapsed' : ''}`}>
         {/* 모바일 전용 접힘 바 — 탭하면 방 목록·상태 필터가 펼쳐짐 (v1.9) */}
-        <button type="button" className="rp-mfold" onClick={() => setMListOpen(o => !o)}>
-          {/* 모바일에선 채팅 머리(제목·캐릭터명·버튼들)를 숨기므로 여기에 캐릭터 이름까지 (사용자 확정) */}
-          <b>{sel ? sel.title : '방 목록'}{sel && <span className="rl"> · {roomLabel(sel)}</span>}</b>
-          <small>MY ROOMS {myRooms.length} {mListOpen ? '▴' : '▾'}</small>
+        <button type="button" className="rp-mfold" aria-expanded={mListOpen}
+          aria-controls="rp-rooms-list" aria-label={mListOpen ? '역극 목록 접기' : '역극 목록 펼치기'}
+          onClick={() => setMListOpen(o => !o)}>
+          {/* 방이 없어도 목록을 접고 펼칠 수 있다. 선택한 방 제목은 접힌 바에 표시. */}
+          <b>{sel ? sel.title : '역극 목록'}{sel && <span className="rl"> · {roomLabel(sel)}</span>}</b>
+          <small>{mListOpen ? '목록 접기 ▲' : '목록 펼치기 ▼'} · {myRooms.length}</small>
         </button>
         {/* 방 목록 — 내 참여 방만 · 헤더 고정, 리스트만 내부 스크롤 */}
         <div className="panel rp-rooms">
