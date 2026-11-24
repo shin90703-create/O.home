@@ -672,11 +672,14 @@ a{color:inherit;text-decoration:none}
   .rp-mfold b{font-size:calc(13px*var(--fs,1));min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rp-mfold small{font-size:calc(10px*var(--fs,1));color:var(--faint);letter-spacing:.08em;white-space:nowrap;flex-shrink:0}
   .rp-rooms-hide{display:none}
-  .rp-rooms{display:none;order:1;max-height:320px}
+  /* 접힘 상태는 빈 방 목록에서도 동일하게 적용한다. PC용 rail CSS와 분리. */
+  .rp-layout > .rp-rooms{display:none!important;order:1;max-height:320px}
+  .rp-layout > .rp-rooms .rp-rooms-compact{display:none!important}
+  .rp-layout > .rp-rooms .rp-rooms-toolbar{display:flex!important}
   /* 세로 배치에선 전폭으로 — start면 내용 폭만큼 쪼그라든다 (v2.0 사용자 제보) */
-  .rp-layout > .tagside{display:none;order:2;align-self:stretch}
-  .rp-layout.mopen .rp-rooms{display:flex}
-  .rp-layout.mopen > .tagside{display:block}
+  .rp-layout > .tagside{display:none!important;order:2;align-self:stretch}
+  .rp-layout.mopen > .rp-rooms{display:flex!important}
+  .rp-layout.mopen > .tagside{display:block!important}
   /* 채팅창을 화면 아래까지 (v2.0 사용자 요청 — 「아래 여백 줄이고 채팅창을 더 아래로」)
      100dvh − 위 요소들(상단바·제목·접힘 바)·BGM 바 여유. 64vh 고정은 아래가 뭉텅 남았다 */
   .rp-chat{order:3;height:calc(100dvh - 187px - var(--top-h,58px));min-height:380px}
