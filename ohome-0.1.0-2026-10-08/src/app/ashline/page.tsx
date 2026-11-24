@@ -75,7 +75,9 @@ function installHomeLore(doc: Document) {
   if (doc.getElementById('ash-lore-dialog')) return;
   const style = doc.createElement('style');
   style.textContent = `
-    .ash-home-signature .ash-lore-tools {display:flex;gap:4px;margin-top:3px;pointer-events:auto;width:max-content;transform:rotate(1.5deg)}
+    .cinematic-entry .ash-home-signature {display:flex;flex-direction:column;align-items:flex-start}
+    .ash-home-signature::after {order:1}
+    .ash-home-signature .ash-lore-tools {order:2;display:flex;gap:4px;margin-top:3px;pointer-events:auto;width:max-content;transform:rotate(1.5deg)}
     .ash-lore-tools button {display:grid;place-items:center;width:26px;height:28px;padding:0;border:0;background:transparent;box-shadow:none;color:#d1edec;cursor:pointer}
     .ash-lore-tools svg {width:14px;height:14px;filter:drop-shadow(0 1px 2px #071116)}
     .ash-lore-tools button:hover,.ash-lore-tools button:focus-visible {color:white}
