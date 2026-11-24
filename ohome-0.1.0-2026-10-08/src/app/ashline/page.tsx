@@ -473,6 +473,62 @@ export default function AshlinePage() {
           `;
           doc.head.appendChild(style);
         }
+        if (!doc.getElementById('ashline-fog-search-quota')) {
+          const script = doc.createElement('script');
+          script.id = 'ashline-fog-search-quota';
+          script.textContent = `
+(() => {
+  const limit = 3;
+  function allowance() {
+    if (!toxicFogActive()) return null;
+    const live = liveToxicFog();
+    const field = live ? 'fogSearchQuota' : 'previewFogSearchQuota';
+    const cycle = live ? fogCycle.activeUntil : fogCycle.nextStart;
+    const record = me()[field];
+    const used = record?.cycle === cycle ? record.used : 0;
+    return { field, cycle, used, left: Math.max(0, limit - used) };
+  }
+
+  const originalChoose = chooseMission;
+  chooseMission = function(action) {
+    const quota = action === 'search' ? allowance() : null;
+    if (!quota) return originalChoose(action);
+    const session = state.session;
+    const user = me();
+    if (!session || session.status !== 'active' || !session.participants.includes(state.active)
+        || session.actions[state.active] || fogBlocks(user) || user.sp < 4) return originalChoose(action);
+    if (session.enemyHp > 0) return;
+    if (!quota.left) {
+      notify('이번 안개의 수색 횟수를 모두 사용했어. 다음 안개에는 3회로 회복돼.');
+      return;
+    }
+    // The original action saves the character and the accepted turn together.
+    user[quota.field] = { cycle: quota.cycle, used: quota.used + 1 };
+    return originalChoose(action);
+  };
+
+  function displayQuota() {
+    const quota = allowance();
+    if (!quota || !maskEquipped(me())) return;
+    const label = '안개 수색 ' + quota.left + '/' + limit;
+    const gear = document.querySelector('.fog-global-alert .fog-gear');
+    if (gear) gear.textContent = '방독면 장착 · ' + label;
+    const button = document.querySelector('button[data-move="search"]');
+    if (button) {
+      button.textContent = '◇ 주변 수색 · ' + quota.left + '/' + limit;
+      if (!quota.left) button.disabled = true;
+    }
+  }
+  const originalRender = render;
+  render = function() {
+    originalRender();
+    displayQuota();
+  };
+  displayQuota();
+})();
+          `;
+          doc.body.appendChild(script);
+        }
         // Patch the embedded chapter's goal presentation using the live shared
         // game state. This does not alter saved data or the per-player mask gate.
         if (!doc.getElementById('ohome-ashline-two-mask-goal')) {
