@@ -32,6 +32,11 @@ const recoveryViews = source => source
   .replace('설비 효과는 두 생존자에게 누적돼.', '어디서든 5분마다 HP와 SP가 1씩 자연 회복돼. 거점에서 휴식하면 아래 수치만큼 추가로 회복해.');
 const characterHelpers = await read('characters.js');
 const districtHtml = upgradeRest(characterViews(html))
+  .replace('function zoneInfo(){', "function travelCost(destination){return destination==='sewer'?0:6;}\nfunction zoneInfo(){")
+  .replace('cost=6,inMission=', 'cost=travelCost(ui.location),inMission=')
+  .replace('→ ${loc.name} 이동 (SP -${cost})', '${cost ? "→ "+loc.name+" 이동 (SP -"+cost+")" : "거점으로 귀환 (SP 0)"}')
+  .replace("if(u.sp<6){notify('이동에 필요한 활동력 SP 6이 부족해.');return}u.sp-=6;", "const cost=travelCost(to);if(u.sp<cost){notify('이동에 필요한 활동력 SP '+cost+'이 부족해.');return}u.sp-=cost;")
+  .replaceAll(' · SP -6`', ' · ${cost ? "SP -"+cost : "거점 귀환 · SP 0"}`')
   .replaceAll('fogRandomMinutes(45,150)', 'fogRandomMinutes(60,165)')
   .replace(/const WEATHER_ENDPOINT='[^']+';/, "const WEATHER_ENDPOINT='/api/ashline/weather';")
   .replaceAll('· Open-Meteo','· 기상청 관측')
