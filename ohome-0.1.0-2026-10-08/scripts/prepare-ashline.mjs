@@ -1,3 +1,4 @@
+import { upgradeRest } from './ashline-rest.mjs';
 import { characterViews } from './ashline-character-views.mjs';
 import { readFile, writeFile } from 'node:fs/promises';
 const dir = new URL('../public/ashline/', import.meta.url);
@@ -21,7 +22,7 @@ Object.assign(LOCATIONS.sewer, {
 });
 `;
 const characterHelpers = await read('characters.js');
-const districtHtml = characterViews(html)
+const districtHtml = upgradeRest(characterViews(html))
   .replaceAll('fogRandomMinutes(45,150)', 'fogRandomMinutes(60,165)')
   .replace(/const WEATHER_ENDPOINT='[^']+';/, "const WEATHER_ENDPOINT='/api/ashline/weather';")
   .replaceAll('· Open-Meteo','· 기상청 관측')
