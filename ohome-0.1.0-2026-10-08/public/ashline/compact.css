@@ -56,3 +56,13 @@
   .page:has(> .loadout-top) .selected-item { padding:9px }
   .page:has(> .loadout-top) .selected-item .large { font-size:28px }
 }
+@media screen {
+  .loadout-top .equip-grid { grid-template-columns:repeat(4,minmax(0,1fr)) }
+  .loadout-top .equip-slot .slot-icon {
+    display:flex; align-items:center; justify-content:center; box-sizing:border-box;
+    width:36px; height:36px; padding:0; line-height:1; margin:4px auto;
+  }
+}
+@media screen and (max-width:480px) {
+  .loadout-top .equip-grid { grid-template-columns:repeat(2,minmax(0,1fr)) }
+}

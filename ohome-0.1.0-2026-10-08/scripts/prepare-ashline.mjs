@@ -33,7 +33,19 @@ const recoveryViews = source => source
 const compactStyles = await read('compact.css');
 const itemEffects = await read('item-effects.js');
 const characterHelpers = await read('characters.js');
-const districtHtml = upgradeRest(characterViews(html))
+// End the fog that was in progress when this balance change was requested.
+const fogClearAt = Date.parse('2026-11-26T04:27:21+09:00');
+function inventoryPanels(source) {
+  const start = source.indexOf('<div class="smallkv"><span>공격 보너스</span>');
+  const status = source.indexOf('<div class="smallkv"><span>상태</span>', start);
+  const end = source.indexOf('</b></div>', status) + '</b></div>'.length;
+  const injury = '<div class="smallkv"><span>부상</span>';
+  if (start < 0 || status < start || end <= status || !source.includes(injury)) throw Error('Missing inventory stat rows');
+  const bonuses = source.slice(start, status);
+  return (source.slice(0, start) + source.slice(end)).replace(injury, () => bonuses + injury)
+    .replace("${u.wounds?'출혈 발생':'없음'}", "${u.wounds?'출혈 · 턴마다 HP 감소':'없음'}");
+}
+const districtHtml = inventoryPanels(upgradeRest(characterViews(html)))
   .replace('</head>', () => '<style>'+compactStyles+'</style></head>')
   .replace('<p class="muted" style="margin:10px 0 0">${it.desc}</p>', '${itemDetails(k)}')
   .replace("!['bandage','soup','meal','can','water'].includes(k)", "!consumableEffects[k]")
@@ -44,6 +56,11 @@ const districtHtml = upgradeRest(characterViews(html))
   .replace("if(u.sp<6){notify('이동에 필요한 활동력 SP 6이 부족해.');return}u.sp-=6;", "const cost=travelCost(to);if(u.sp<cost){notify('이동에 필요한 활동력 SP '+cost+'이 부족해.');return}u.sp-=cost;")
   .replaceAll(' · SP -6`', ' · ${cost ? "SP -"+cost : "거점 귀환 · SP 0"}`')
   .replaceAll('fogRandomMinutes(45,150)', 'fogRandomMinutes(60,165)')
+  .replace('ashlineConnected=true;document.documentElement', `{
+    if (state.fogCycle && fogCycle.activeUntil > ${fogClearAt} && fogCycle.lastStart <= ${fogClearAt}) {
+      state.fogCycle=fogCycle=newFogSchedule();
+    }
+  } ashlineConnected=true;document.documentElement`)
   .replace('fogRandomMinutes(30,180)', 'fogRandomMinutes(10,30)')
   .replace(/const WEATHER_ENDPOINT='[^']+';/, "const WEATHER_ENDPOINT='/api/ashline/weather';")
   .replaceAll('· Open-Meteo','· 기상청 관측')
