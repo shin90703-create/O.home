@@ -30,9 +30,11 @@ const recoveryViews = source => source
   .replaceAll('${u.hp}<small>', '${vitalValue(u,"hp")}<small>')
   .replaceAll('${u.sp}', '${vitalValue(u,"sp")}')
   .replace('설비 효과는 두 생존자에게 누적돼.', '어디서든 5분마다 HP와 SP가 1씩 자연 회복돼. 거점에서 휴식하면 아래 수치만큼 추가로 회복해.');
+const compactStyles = await read('compact.css');
 const itemEffects = await read('item-effects.js');
 const characterHelpers = await read('characters.js');
 const districtHtml = upgradeRest(characterViews(html))
+  .replace('</head>', () => '<style>'+compactStyles+'</style></head>')
   .replace('<p class="muted" style="margin:10px 0 0">${it.desc}</p>', '${itemDetails(k)}')
   .replace("!['bandage','soup','meal','can','water'].includes(k)", "!consumableEffects[k]")
   .replace("let u=me(),hp=0,sp=0;if(id==='bandage'){hp=18;u.wounds=0}else if(id==='soup'){hp=12;sp=10}else if(id==='meal'){hp=16;sp=15}else if(id==='can'){hp=5;sp=6}else if(id==='water')sp=12;else return;", "const u=me(),effect=consumableEffects[id];if(!effect)return;const {hp,sp}=effect;if(effect.stopsBleeding)u.wounds=0;")

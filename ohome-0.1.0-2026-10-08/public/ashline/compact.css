@@ -1,0 +1,40 @@
+@media screen and (min-width:781px) {
+  .sidebar { padding-top:16px }
+  .sidebar .brand { margin-bottom:18px }
+  .sidebar .nav { gap:2px; grid-auto-rows:max-content; align-content:start }
+  .sidebar .nav button { padding-block:5px; line-height:1.25; min-height:34px }
+  .sidebar .nav small { line-height:1.15 }
+}
+@media screen and (max-width:780px) {
+  .sidebar { padding-block:3px }
+  .sidebar .nav button { padding-block:3px; min-height:40px }
+}
+@media screen {
+  .page:has(> .role-layout) { max-width:1220px; padding-block:10px }
+  .page:has(> .role-layout) > .section-head { margin-bottom:8px }
+  .page:has(> .role-layout) > .section-head p { display:none }
+  .role-layout { gap:10px; align-items:start }
+  .role-layout .panel-head { padding:8px 12px }
+  .role-layout > .panel:has(> .role-thread) {
+    display:flex; flex-direction:column; min-width:0;
+    height:clamp(300px,calc(100dvh - 175px),800px);
+  }
+  .role-layout .role-thread { flex:1 1 0; min-height:0; max-height:none; padding:10px 14px; gap:8px }
+  .role-thread .rp-message { flex:none; gap:6px; max-width:88% }
+  .role-thread .rp-message > div:last-child { min-width:0 }
+  .role-thread .rp-avatar { width:28px; height:28px }
+  .role-thread .rp-nick { margin-bottom:2px }
+  .role-thread .rp-balloon { min-width:0; padding:5px 9px; line-height:1.5 }
+  .role-layout .rp-composer { padding:7px 10px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:5px 8px }
+  .rp-composer .speaker-picker { grid-column:1/-1; margin:0 }
+  .rp-composer .writer-input { height:46px; min-height:46px; padding:6px 8px }
+  .rp-composer > .btnrow { margin:0!important; align-items:stretch }
+}
+@media screen and (max-width:980px) {
+  .role-layout > .panel:has(> .role-thread) { height:clamp(280px,calc(100dvh - 255px),760px) }
+}
+@media screen and (max-width:780px) {
+  .role-layout > .panel:has(> .role-thread) { height:clamp(250px,calc(100dvh - 330px),740px) }
+  .role-layout .role-thread { padding:8px; gap:7px }
+  .role-thread .rp-message { max-width:95% }
+}
