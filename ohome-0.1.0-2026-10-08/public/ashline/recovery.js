@@ -1,18 +1,24 @@
-const recoveryInterval = 5 * 60 * 1000;
-function recoverSurvivors(now) {
-  const since = state.recoveryAt;
+function recoverStat(now, stat, clock, interval) {
+  const since = state[clock];
   if (!Number.isFinite(since) || since <= 0 || since > now) {
-    state.recoveryAt = now;
+    state[clock] = now;
     return false;
   }
-  const points = Math.floor((now - since) / recoveryInterval);
+  const points = Math.floor((now - since) / interval);
   if (!points) return false;
-  state.recoveryAt = since + points * recoveryInterval;
+  state[clock] = since + points * interval;
   for (const survivor of Object.values(state.users)) {
-    survivor.hp = Math.min(100, survivor.hp + points);
-    survivor.sp = Math.min(100, survivor.sp + points);
+    survivor[stat] = Math.min(100, survivor[stat] + points);
   }
   return true;
+}
+
+function recoverSurvivors(now) {
+  // Existing saves used the HP clock for both stats.
+  state.spRecoveryAt ??= state.recoveryAt;
+  const hpChanged = recoverStat(now, 'hp', 'recoveryAt', 300000);
+  const spChanged = recoverStat(now, 'sp', 'spRecoveryAt', 180000);
+  return hpChanged || spChanged;
 }
 
 function vitalValue(user, stat) {

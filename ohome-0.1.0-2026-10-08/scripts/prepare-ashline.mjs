@@ -29,7 +29,7 @@ const recoveryViews = source => source
   .replaceAll('${u.hp}/', '${vitalValue(u,"hp")}/')
   .replaceAll('${u.hp}<small>', '${vitalValue(u,"hp")}<small>')
   .replaceAll('${u.sp}', '${vitalValue(u,"sp")}')
-  .replace('설비 효과는 두 생존자에게 누적돼.', '어디서든 5분마다 HP와 SP가 1씩 자연 회복돼. 거점에서 휴식하면 아래 수치만큼 추가로 회복해.');
+  .replace('설비 효과는 두 생존자에게 누적돼.', '어디서든 HP는 5분마다, SP는 3분마다 1씩 자연 회복돼. 거점에서 휴식하면 아래 수치만큼 추가로 회복해.');
 const compactStyles = await read('compact.css');
 const itemEffects = await read('item-effects.js');
 const characterHelpers = await read('characters.js');

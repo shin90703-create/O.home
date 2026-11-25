@@ -38,3 +38,21 @@
   .role-layout .role-thread { padding:8px; gap:7px }
   .role-thread .rp-message { max-width:95% }
 }
+
+@media screen {
+  .page:has(> .loadout-top) { max-width:1160px; padding-block:12px }
+  .page:has(> .loadout-top) .section-head { margin-bottom:10px }
+  .page:has(> .loadout-top) :is(.loadout-top,.grid) { gap:10px; margin-bottom:10px }
+  .page:has(> .loadout-top) .panel-head { padding:8px 12px }
+  .page:has(> .loadout-top) .panel-body { padding:10px 12px }
+  .loadout-top .equip-grid { gap:5px }
+  .loadout-top .equip-slot { min-height:0; height:auto; padding:7px 4px }
+  .loadout-top .slot-icon { font-size:22px; height:30px; margin:3px auto }
+  .loadout-top .vital-number { font-size:30px; margin-block:3px }
+  .loadout-top .smallkv { padding-block:4px }
+  .page:has(> .loadout-top) .item-grid { grid-template-columns:repeat(auto-fill,minmax(min(75px,100%),1fr)); gap:5px }
+  .page:has(> .loadout-top) .item-grid .item { height:auto; min-height:60px; padding:5px; aspect-ratio:auto }
+  .page:has(> .loadout-top) .item .emo { font-size:21px; margin:0 }
+  .page:has(> .loadout-top) .selected-item { padding:9px }
+  .page:has(> .loadout-top) .selected-item .large { font-size:28px }
+}
