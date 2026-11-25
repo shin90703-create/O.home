@@ -24,6 +24,7 @@ Object.assign(LOCATIONS.sewer, {
   desc:'목척교 아래, 하천 옆에 자리 잡은 두 사람의 거점. 물이 잦아들면 건너편 중앙시장 쪽 셔터들이 보인다.'
 });
 `;
+const rpDrafts = await read('rp-drafts.js');
 const recovery = await read('recovery.js');
 const recoveryViews = source => source
   .replaceAll('${me().hp}', '${vitalValue(me(),"hp")}')
@@ -79,6 +80,21 @@ const districtHtml = independentMissions(inventoryPanels(upgradeRest(characterVi
   .replaceAll('대전 일반 생활권을 모티브로 제작한 가상 도시 지도.', '은행동과 목척교 일대를 모티브로 한 가상 생활권 지도.')
   .replaceAll('<b>B-03 생활권</b></div>${mapPins()}', '<b>B-03 은행동 · 목척교</b></div>${mapPins()}');
 const inject = (source, hooks) => source.replace(marker, () => itemEffects+'\n'+characterHelpers+'\n'+districtLandmarks+'\n'+hooks+'\n'+marker);
-await writeFile(new URL('chapter.html',dir),inject(recoveryViews(districtHtml),recovery+'\n'+visibility+'\n'+player));
+const draftHooks = [
+  ["if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&e.target?.id==='rpInput')", "if(e.key==='Enter'&&!e.isComposing&&(e.ctrlKey||e.metaKey)&&e.target?.id==='rpInput')"],
+  ['id="rpInput" rows=', 'id="rpInput" data-rp-room="${esc(r.id)}" rows='],
+  ['id="rpEditInput" rows=', 'id="rpEditInput" data-rp-room="${esc(r.id)}" data-rp-edit="${esc(m.id)}" rows='],
+  ["?'narration':'character'});save();render();let thread", "?'narration':'character'});submittedField(e,r.messages[r.messages.length-1]);save();render();let thread"],
+  ["m.text=v;m.edited=true;ui.roleEditing=null;", "m.text=v;m.edited=true;submittedField(document.getElementById('rpEditInput'),m);ui.roleEditing=null;"],
+  ["case 'cancelRpEdit':ui.roleEditing=null;", "case 'cancelRpEdit':discardEdit();ui.roleEditing=null;"],
+  ["function ashlineApply(payload,revision,slot){", "function ashlineApply(payload,revision,slot){loadDraftBook(slot);reconcileDrafts(payload,true);"],
+  ["ashlineCurrentFingerprint=ashlineLastSent;", "if(ashlineLastSent)reconcileDrafts(JSON.parse(ashlineLastSent),false);ashlineCurrentFingerprint=ashlineLastSent;"]
+];
+let playerHtml = recoveryViews(districtHtml);
+for (const [before,after] of draftHooks) {
+  if (!playerHtml.includes(before)) throw Error('Missing roleplay draft hook: '+before);
+  playerHtml = playerHtml.replaceAll(before, () => after);
+}
+await writeFile(new URL('chapter.html',dir),inject(playerHtml,recovery+'\n'+visibility+'\n'+player+'\n'+rpDrafts));
 const watch=inject(districtHtml,observer).replace("window.parent.postMessage({type:'ASHLINE_READY'},location.origin)",'void 0');
 await writeFile(new URL('observer.html',dir),watch.replace('</head>',()=>'<style>'+scroll+'.sidebar{overflow-y:auto!important;min-height:0!important}</style></head>').replace('</body>',()=>'<script>'+lore+'</script></body>'));
