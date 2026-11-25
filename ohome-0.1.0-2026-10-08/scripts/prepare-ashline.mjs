@@ -1,3 +1,4 @@
+import { independentMissions } from './ashline-missions.mjs';
 import { travelViews } from './ashline-travel.mjs';
 import { encounterViews } from './ashline-encounters.mjs';
 import { upgradeRest } from './ashline-rest.mjs';
@@ -47,7 +48,7 @@ function inventoryPanels(source) {
   return (source.slice(0, start) + source.slice(end)).replace(injury, () => bonuses + injury)
     .replace("${u.wounds?'출혈 발생':'없음'}", "${u.wounds?'출혈 · 턴마다 HP 감소':'없음'}");
 }
-const districtHtml = inventoryPanels(upgradeRest(characterViews(encounterViews(travelViews(html)))))
+const districtHtml = independentMissions(inventoryPanels(upgradeRest(characterViews(encounterViews(travelViews(html))))))
   .replace('</head>', () => '<style>'+compactStyles+'</style></head>')
   .replace('<p class="muted" style="margin:10px 0 0">${it.desc}</p>', '${itemDetails(k)}')
   .replace("!['bandage','soup','meal','can','water'].includes(k)", "!consumableEffects[k]")

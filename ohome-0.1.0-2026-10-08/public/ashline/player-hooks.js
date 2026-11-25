@@ -14,7 +14,7 @@
   chooseMission = function(action) {
     const quota = action === 'search' ? allowance() : null;
     if (!quota) return originalChoose(action);
-    const session = state.session;
+    const session = myMission();
     const user = me();
     if (!session || session.status !== 'active' || !session.participants.includes(state.active)
         || session.actions[state.active] || fogBlocks(user) || user.sp < 4) return originalChoose(action);
