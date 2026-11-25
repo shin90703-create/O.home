@@ -1,4 +1,4 @@
-const recoveryInterval = 10 * 60 * 1000;
+const recoveryInterval = 5 * 60 * 1000;
 function recoverSurvivors(now) {
   const since = state.recoveryAt;
   if (!Number.isFinite(since) || since <= 0 || since > now) {
