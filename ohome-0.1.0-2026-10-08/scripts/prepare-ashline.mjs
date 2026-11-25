@@ -21,6 +21,15 @@ Object.assign(LOCATIONS.sewer, {
   desc:'목척교 아래, 하천 옆에 자리 잡은 두 사람의 거점. 물이 잦아들면 건너편 중앙시장 쪽 셔터들이 보인다.'
 });
 `;
+const recovery = await read('recovery.js');
+const recoveryViews = source => source
+  .replaceAll('${me().hp}', '${vitalValue(me(),"hp")}')
+  .replaceAll('${me().sp}', '${vitalValue(me(),"sp")}')
+  .replaceAll('style="width:${u.hp}%"', 'data-hp-meter="${u === state.users.A ? "A" : "B"}" style="width:${u.hp}%"')
+  .replaceAll('${u.hp}/', '${vitalValue(u,"hp")}/')
+  .replaceAll('${u.hp}<small>', '${vitalValue(u,"hp")}<small>')
+  .replaceAll('${u.sp}', '${vitalValue(u,"sp")}')
+  .replace('설비 효과는 두 생존자에게 누적돼.', '어디서든 10분마다 HP와 SP가 1씩 자연 회복돼. 거점에서 휴식하면 아래 수치만큼 추가로 회복해.');
 const characterHelpers = await read('characters.js');
 const districtHtml = upgradeRest(characterViews(html))
   .replaceAll('fogRandomMinutes(45,150)', 'fogRandomMinutes(60,165)')
@@ -32,6 +41,6 @@ const districtHtml = upgradeRest(characterViews(html))
   .replaceAll('대전 일반 생활권을 모티브로 제작한 가상 도시 지도.', '은행동과 목척교 일대를 모티브로 한 가상 생활권 지도.')
   .replaceAll('<b>B-03 생활권</b></div>${mapPins()}', '<b>B-03 은행동 · 목척교</b></div>${mapPins()}');
 const inject = (source, hooks) => source.replace(marker, () => characterHelpers+'\n'+districtLandmarks+'\n'+hooks+'\n'+marker);
-await writeFile(new URL('chapter.html',dir),inject(districtHtml,visibility+'\n'+player));
+await writeFile(new URL('chapter.html',dir),inject(recoveryViews(districtHtml),recovery+'\n'+visibility+'\n'+player));
 const watch=inject(districtHtml,observer).replace("window.parent.postMessage({type:'ASHLINE_READY'},location.origin)",'void 0');
 await writeFile(new URL('observer.html',dir),watch.replace('</head>',()=>'<style>'+scroll+'.sidebar{overflow-y:auto!important;min-height:0!important}</style></head>').replace('</body>',()=>'<script>'+lore+'</script></body>'));
