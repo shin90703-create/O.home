@@ -1,3 +1,4 @@
+import { characterViews } from './ashline-character-views.mjs';
 import { readFile, writeFile } from 'node:fs/promises';
 const dir = new URL('../public/ashline/', import.meta.url);
 const read = file => readFile(new URL(file,dir),'utf8');
@@ -19,7 +20,8 @@ Object.assign(LOCATIONS.sewer, {
   desc:'목척교 아래, 하천 옆에 자리 잡은 두 사람의 거점. 물이 잦아들면 건너편 중앙시장 쪽 셔터들이 보인다.'
 });
 `;
-const districtHtml = html
+const characterHelpers = await read('characters.js');
+const districtHtml = characterViews(html)
   .replace(/const WEATHER_ENDPOINT='[^']+';/, "const WEATHER_ENDPOINT='/api/ashline/weather';")
   .replaceAll('· Open-Meteo','· 기상청 관측')
   .replace('weatherLive.condition=wmoName(weatherLive.code);','weatherLive.condition=current.condition;')
@@ -27,7 +29,7 @@ const districtHtml = html
   .replaceAll('마지막 수신','관측 시각')
   .replaceAll('대전 일반 생활권을 모티브로 제작한 가상 도시 지도.', '은행동과 목척교 일대를 모티브로 한 가상 생활권 지도.')
   .replaceAll('<b>B-03 생활권</b></div>${mapPins()}', '<b>B-03 은행동 · 목척교</b></div>${mapPins()}');
-const inject = (source, hooks) => source.replace(marker, () => districtLandmarks+'\n'+hooks+'\n'+marker);
+const inject = (source, hooks) => source.replace(marker, () => characterHelpers+'\n'+districtLandmarks+'\n'+hooks+'\n'+marker);
 await writeFile(new URL('chapter.html',dir),inject(districtHtml,visibility+'\n'+player));
 const watch=inject(districtHtml,observer).replace("window.parent.postMessage({type:'ASHLINE_READY'},location.origin)",'void 0');
 await writeFile(new URL('observer.html',dir),watch.replace('</head>',()=>'<style>'+scroll+'.sidebar{overflow-y:auto!important;min-height:0!important}</style></head>').replace('</body>',()=>'<script>'+lore+'</script></body>'));
