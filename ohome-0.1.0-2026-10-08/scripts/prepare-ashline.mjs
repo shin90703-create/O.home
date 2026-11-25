@@ -22,6 +22,7 @@ Object.assign(LOCATIONS.sewer, {
 `;
 const characterHelpers = await read('characters.js');
 const districtHtml = characterViews(html)
+  .replaceAll('fogRandomMinutes(45,150)', 'fogRandomMinutes(60,165)')
   .replace(/const WEATHER_ENDPOINT='[^']+';/, "const WEATHER_ENDPOINT='/api/ashline/weather';")
   .replaceAll('· Open-Meteo','· 기상청 관측')
   .replace('weatherLive.condition=wmoName(weatherLive.code);','weatherLive.condition=current.condition;')
