@@ -28,6 +28,7 @@ function vitalValue(user, stat) {
 
 function updateRecovery() {
   if (!ashlineConnected || !recoverSurvivors(Date.now())) return;
+  refreshTravelButton();
   for (const el of document.querySelectorAll('[data-vital-slot]')) {
     el.textContent = state.users[el.dataset.vitalSlot][el.dataset.stat];
   }

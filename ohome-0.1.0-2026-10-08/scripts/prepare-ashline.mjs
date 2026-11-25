@@ -1,3 +1,4 @@
+import { travelViews } from './ashline-travel.mjs';
 import { encounterViews } from './ashline-encounters.mjs';
 import { upgradeRest } from './ashline-rest.mjs';
 import { characterViews } from './ashline-character-views.mjs';
@@ -46,16 +47,11 @@ function inventoryPanels(source) {
   return (source.slice(0, start) + source.slice(end)).replace(injury, () => bonuses + injury)
     .replace("${u.wounds?'출혈 발생':'없음'}", "${u.wounds?'출혈 · 턴마다 HP 감소':'없음'}");
 }
-const districtHtml = inventoryPanels(upgradeRest(characterViews(encounterViews(html))))
+const districtHtml = inventoryPanels(upgradeRest(characterViews(encounterViews(travelViews(html)))))
   .replace('</head>', () => '<style>'+compactStyles+'</style></head>')
   .replace('<p class="muted" style="margin:10px 0 0">${it.desc}</p>', '${itemDetails(k)}')
   .replace("!['bandage','soup','meal','can','water'].includes(k)", "!consumableEffects[k]")
   .replace("let u=me(),hp=0,sp=0;if(id==='bandage'){hp=18;u.wounds=0}else if(id==='soup'){hp=12;sp=10}else if(id==='meal'){hp=16;sp=15}else if(id==='can'){hp=5;sp=6}else if(id==='water')sp=12;else return;", "const u=me(),effect=consumableEffects[id];if(!effect)return;const {hp,sp}=effect;if(effect.stopsBleeding)u.wounds=0;")
-  .replace('function zoneInfo(){', "function travelCost(destination){return destination==='sewer'?0:6;}\nfunction zoneInfo(){")
-  .replace('cost=6,inMission=', 'cost=travelCost(ui.location),inMission=')
-  .replace('→ ${loc.name} 이동 (SP -${cost})', '${cost ? "→ "+loc.name+" 이동 (SP -"+cost+")" : "거점으로 귀환 (SP 0)"}')
-  .replace("if(u.sp<6){notify('이동에 필요한 활동력 SP 6이 부족해.');return}u.sp-=6;", "const cost=travelCost(to);if(u.sp<cost){notify('이동에 필요한 활동력 SP '+cost+'이 부족해.');return}u.sp-=cost;")
-  .replaceAll(' · SP -6`', ' · ${cost ? "SP -"+cost : "거점 귀환 · SP 0"}`')
   .replaceAll('fogRandomMinutes(45,150)', 'fogRandomMinutes(60,165)')
   .replace('ashlineConnected=true;document.documentElement', `{
     if (state.fogCycle && fogCycle.activeUntil > ${fogClearAt} && fogCycle.lastStart <= ${fogClearAt}) {
