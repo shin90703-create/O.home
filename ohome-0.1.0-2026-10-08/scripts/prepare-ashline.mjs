@@ -49,18 +49,22 @@ function inventoryPanels(source) {
   return (source.slice(0, start) + source.slice(end)).replace(injury, () => bonuses + injury)
     .replace("${u.wounds?'출혈 발생':'없음'}", "${u.wounds?'출혈 · 턴마다 HP 감소':'없음'}");
 }
-function addWaterDrops(source) {
+function tuneSearchLoot(source) {
   const lootLog = 's.logs.push(`${ITEMS[item].name} ×${bonus} 확보`)';
   const lootList = "${p.loot.map(k=>ITEMS[k].name).join(' / ')}";
-  if (!source.includes(lootLog) || !source.includes(lootList)) throw Error('Missing exploration loot template');
-  return source.replace(lootLog, () => lootLog + `;
+  const roll = 'let item=sample(p.loot);';
+  if (!source.includes(roll) || !source.includes(lootLog) || !source.includes(lootList)) throw Error('Missing exploration loot template');
+  return source.replace(roll, roll + `
+    if (item === 'bandage' && hasFacility('bench') && Math.random() < 0.75) item = 'alcohol';
+    `)
+    .replace(lootLog, () => lootLog + `;
     if (!p.loot.includes('water') && Math.random() < 1/8) {
       s.loot.water = (s.loot.water || 0) + 1;
       s.logs.push('생수 ×1 추가 확보');
     }`)
-    .replaceAll(lootList, () => lootList + "${p.loot.includes('water')?'':' / 생수 (추가 발견 12.5%)'}");
+    .replaceAll(lootList, () => lootList + "${hasFacility('bench') && p.loot.includes('bandage') ? (p.loot.includes('alcohol') ? ' (작업대 설치 후 소독약 우세)' : ' / 소독약 (작업대 설치 효과)') : ''}${p.loot.includes('water')?'':' / 생수 (추가 발견 12.5%)'}");
 }
-const districtHtml = independentMissions(inventoryPanels(upgradeRest(characterViews(encounterViews(travelViews(addWaterDrops(html)))))))
+const districtHtml = independentMissions(inventoryPanels(upgradeRest(characterViews(encounterViews(travelViews(tuneSearchLoot(html)))))))
   .replace('</head>', () => '<style>'+compactStyles+'</style></head>')
   .replace('<p class="muted" style="margin:10px 0 0">${it.desc}</p>', '${itemDetails(k)}')
   .replace("!['bandage','soup','meal','can','water'].includes(k)", "!consumableEffects[k]")
