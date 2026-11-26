@@ -24,6 +24,7 @@ Object.assign(LOCATIONS.sewer, {
   desc:'목척교 아래, 하천 옆에 자리 잡은 두 사람의 거점. 물이 잦아들면 건너편 중앙시장 쪽 셔터들이 보인다.'
 });
 `;
+const localWeather = await read('local-weather.js');
 const rpScroll = await read('rp-scroll.js');
 const rpDrafts = await read('rp-drafts.js');
 const recovery = await read('recovery.js');
@@ -80,6 +81,12 @@ const districtHtml = independentMissions(inventoryPanels(upgradeRest(characterVi
   .replace('fogRandomMinutes(30,180)', 'fogRandomMinutes(10,30)')
   .replace(/const WEATHER_ENDPOINT='[^']+';/, "const WEATHER_ENDPOINT='/api/ashline/weather';")
   .replaceAll('· Open-Meteo','· 기상청 관측')
+  .replace('function displayWeatherKind()', () => localWeather+'\nfunction displayWeatherKind()')
+  .replaceAll('data-mode="${displayWeatherKind()}">${drawWeatherParticles(displayWeatherKind())}', 'data-mode="${localPrecipitation() || displayWeatherKind()}">${drawWeatherParticles(localPrecipitation() || displayWeatherKind())}')
+  .replace('const kind=displayWeatherKind();', 'const local=localPrecipitation(), kind=local || displayWeatherKind();')
+  .replace('if(icon)icon.textContent=weatherIcon(kind,', 'if(icon)icon.textContent=weatherIcon(displayWeatherKind(),')
+  .replace('<div class="weather-status-row">', '<div class="tinylabel" id="ashLocalWeather">${localWeatherLabel(localPrecipitation())}</div><div class="weather-status-row">')
+  .replace('if(condition)condition.textContent=', "const localLabel=document.getElementById('ashLocalWeather');if(localLabel)localLabel.textContent=localWeatherLabel(local);\n if(condition)condition.textContent=")
   .replace('weatherLive.condition=wmoName(weatherLive.code);','weatherLive.condition=current.condition;')
   .replace('weatherLive.updated=Date.now();','weatherLive.updated=current.observedAt;')
   .replaceAll('마지막 수신','관측 시각')
