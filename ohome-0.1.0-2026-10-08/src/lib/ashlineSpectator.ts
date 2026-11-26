@@ -20,7 +20,7 @@ function publicView(payload: World['payload']) {
   const bySlot = (source: unknown, project: (v: Record<string,unknown>)=>unknown) =>
     Object.fromEntries(['A','B'].map(id => [id,project(record(record(source)[id]))]));
   const base = record(g.base);
-  const visibleMission = (session: Record<string,unknown>) => session.siteId ? {...pick(session,'siteId status stage leader kind enemyHp enemyLevel'),participants:slots(session.participants),loot:counts(session.loot),actions:pick(session.actions,'A B'),logs:[]} : null;
+  const visibleMission = (session: Record<string,unknown>) => session.siteId ? {...pick(session,'siteId status stage leader kind enemyHp enemyLevel warehouse'),participants:slots(session.participants),loot:counts(session.loot),actions:pick(session.actions,'A B'),logs:[]} : null;
   const messages = (v: unknown) => rows(v).map(m=>pick(m,'id from text time edited kind'));
   return { schema:2, game:{
     users:bySlot(g.users,u=>({...pick(u,'name zone location hp sp wounds lastRest'),equipment:pick(u.equipment,'face weapon armor tool'),inv:counts(u.inv)})),

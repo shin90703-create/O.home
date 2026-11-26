@@ -22,6 +22,7 @@ function itemDetails(id) {
     };
     lines.push('장착 효과 · ' + (toolEffects[id] || item.desc));
   }
+  if (id === 'crowbar') lines.push('휴대 효과 · 수색 마지막에 발견한 폐쇄 창고를 열 수 있어. 사용해도 소모되지 않아.');
   const recipes = RECIPES.filter(r => r.mats[id]).map(r => ITEMS[r.target].name);
   const facilities = FACILITIES.filter(f => f.need[id]).map(f => f.name);
   if (recipes.length) lines.push('제작·요리 재료 · ' + recipes.join(', '));

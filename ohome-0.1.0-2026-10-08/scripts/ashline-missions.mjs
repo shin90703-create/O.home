@@ -30,6 +30,34 @@ function storeMission(s) {
     if (!openMission(state.session)) state.session = null;
   }
 }
+function carriesCrowbar(s) {
+  return s.participants.some(id => count(state.users[id], 'crowbar') > 0);
+}
+function finishThirdStage(s) {
+  if (s.warehouse || s.status !== 'active') return;
+  if (Math.random() >= 0.10) return endMission(s,true);
+  s.warehouse = carriesCrowbar(s) ? 'locked' : 'noTool';
+  eventText(s,'마지막 구역 너머에서 폐쇄된 창고를 발견했다.');
+}
+function warehousePanel(s) {
+  const ready = s.warehouse === 'locked' && carriesCrowbar(s);
+  const hint = ready ? '문틈에 지렛대를 넣으면 잠긴 문을 열 수 있어.' : '가져온 지렛대가 없어. 문을 열 수 없지만 수색 물자는 챙겨 갈 수 있어.';
+  const choices = (ready ? '<button class="btn primary" data-action="openWarehouse">지렛대로 열기</button>' : '') +
+    '<button class="btn outline" data-action="skipWarehouse">창고를 지나쳐 귀환하기</button>';
+  return '<div class="over">수색 완료 · 3 / 3</div><h3>폐쇄된 창고 발견</h3><p class="muted">'+hint+'</p>' +
+    (s.leader === state.active ? '<div class="btnrow">'+choices+'</div>' : '<p>탐사 대장의 선택을 기다리는 중이야.</p>');
+}
+function resolveWarehouse(s,open) {
+  if (!s || s.status !== 'active' || !s.warehouse || s.leader !== state.active) return;
+  if (open) {
+    if (s.warehouse !== 'locked' || !carriesCrowbar(s)) return;
+    const site = POOL.find(p => p.id === s.siteId);
+    if (!Object.keys(s.loot).length) gainLoot(s,site,1);
+    eventText(s,'지렛대로 창고 문을 열고 남겨진 물자를 확보했다.');
+    gainLoot(s,site,2);
+  } else eventText(s,'창고를 지나쳐 확보한 수색 물자를 챙겨 돌아왔다.');
+  endMission(s,true);
+}
 function leaveMissionResult() {
   if (openMission(myMission())) return;
   if (state.soloMissions?.[state.active]) delete state.soloMissions[state.active];
@@ -60,7 +88,11 @@ function leaveMissionResult() {
     ["출발 준비 완료`]};if(p.mode", "출발 준비 완료`]});if(p.mode"],
     ["if(state.session&&['waiting','active'].includes(state.session.status))endMission(state.session,false)", "if(openMission(myMission()))endMission(myMission(),false)"],
     ["case'return':state.session=null;ui.page='map';", "case'return':leaveMissionResult();"],
-    ["function endMission(s,success=true){s.status=", "function endMission(s,success=true){if(!openMission(s))return;s.status="]
+    ["function endMission(s,success=true){s.status=", "function endMission(s,success=true){if(!openMission(s))return;s.status="],
+    ['if(s.stage>=3&&s.enemyHp<=0)endMission(s,true)', 'if(s.stage>=3&&s.enemyHp<=0)finishThirdStage(s)'],
+    ['if(s.actions[state.active])return;let u=me()', 'if(s.warehouse||s.actions[state.active])return;let u=me()'],
+    ['`:`<div class="over">구역 진행도', '`:s.warehouse?warehousePanel(s):`<div class="over">구역 진행도'],
+    ["case'cancel':if(openMission(myMission()))", "case'openWarehouse':case'skipWarehouse':resolveWarehouse(myMission(),name==='openWarehouse');break;case'cancel':if(myMission()?.warehouse)break;if(openMission(myMission()))"]
   ];
   for(const [before,after] of edits) {
     if(typeof before==='string' ? !html.includes(before) : !before.test(html)) throw Error('Missing mission hook: '+before);
