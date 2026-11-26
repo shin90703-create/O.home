@@ -160,3 +160,14 @@
   -webkit-mask: var(--foreground) center / 100% 100% no-repeat;
   mask: var(--foreground) center / 100% 100% no-repeat;
 }
+
+.btn[data-action="use"]:enabled {
+  background: #8bbdb5;
+  border-color: #b4d8d0;
+  color: #102827;
+  font-weight: 700;
+}
+.btn[data-action="use"]:enabled:hover { background: #a4cec6 }
+.btn[data-action="use"]:focus-visible { outline: 2px solid #def3ed; outline-offset: 2px }
+.btn[data-action="gift"]:enabled { background: #23303b; border-color: #677581; color: #d0dae1 }
+.btn[data-action="gift"]:enabled:hover { background: #34434f }
