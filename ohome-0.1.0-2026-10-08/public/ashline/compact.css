@@ -131,7 +131,7 @@
 .shelter-art.scene-full .resident-A { left: 16%; bottom: 12%; height: 55% }
 .shelter-art.scene-empty .resident-A { left: 15%; bottom: 10%; height: 51% }
 
-.shelter-art .resident-B { left: 21%; bottom: 17%; height: 49%; z-index: 85;
+.shelter-art .resident-B { left: 21%; bottom: 15%; height: 49%; z-index: 85;
   aspect-ratio: 740 / 775;
   --seat-x: 30%;
   --seat-y: 60%;
@@ -140,8 +140,8 @@
   --right-boot-x: 61%;
   --right-boot-y: 3%;
 }
-.shelter-art.scene-full .resident-B { left: 24%; bottom: 17%; height: 48% }
-.shelter-art.scene-empty .resident-B { left: 23%; bottom: 16%; height: 46% }
+.shelter-art.scene-full .resident-B { left: 24%; bottom: 15%; height: 48% }
+.shelter-art.scene-empty .resident-B { left: 23%; bottom: 14%; height: 46% }
 
 /* The foreground objects are painted into each shelter plate. Reveal those
    same pixels in front of the occupants, using the outline for that stage. */
