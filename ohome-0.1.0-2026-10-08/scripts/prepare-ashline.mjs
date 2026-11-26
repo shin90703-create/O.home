@@ -69,7 +69,7 @@ function tuneSearchLoot(source) {
 const districtHtml = independentMissions(inventoryPanels(upgradeRest(characterViews(encounterViews(travelViews(tuneSearchLoot(html)))))))
   .replace('id="roleThread"', 'id="roleThread" data-room-id="${esc(r.id)}"')
   .replace('const pictured={', "const residents=hasFacility('bed') ? ['B','A'].filter(slot => state.users[slot]?.location === 'sewer') : [];\n const pictured={")
-  .replace('시설 ${installed}개">${props}</div>', '시설 ${installed}개${residents.map(slot => " · "+esc(state.users[slot].name)+" 휴식 중").join("")}">${props}${residents.map(slot => `<img class="shelter-resident resident-${slot}" src="/ashline/scenes/survivor-${slot.toLowerCase()}-resting.webp" alt="">`).join("")}</div>')
+  .replace('시설 ${installed}개">${props}</div>', '시설 ${installed}개${residents.map(slot => " · "+esc(state.users[slot].name)+" 휴식 중").join("")}">${props}${residents.map(slot => `<span class="shelter-resident resident-${slot}"><img src="/ashline/scenes/survivor-${slot.toLowerCase()}-resting.webp" alt=""></span>`).join("")}</div>')
   .replace('</head>', () => '<style>'+compactStyles+'</style></head>')
   .replace('<p class="muted" style="margin:10px 0 0">${it.desc}</p>', '${itemDetails(k)}')
   .replace("!['bandage','soup','meal','can','water'].includes(k)", "!consumableEffects[k]")
