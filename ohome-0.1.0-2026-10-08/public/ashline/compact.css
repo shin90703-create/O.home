@@ -86,7 +86,6 @@
 .district-map > .ash-toxic-fog.active { opacity: .6 }
 
 .shelter-art .shelter-resident {
-  opacity: 0; /* Hidden until the final character artwork is ready. */
   position: absolute;
   left: 13%;
   bottom: 9%;
@@ -96,5 +95,9 @@
   pointer-events: none;
   filter: brightness(.87) drop-shadow(1px 2px 2px #100c0966);
 }
-.shelter-art.scene-full .shelter-resident { left: 16%; bottom: 12%; height: 55% }
-.shelter-art.scene-empty .shelter-resident { left: 15%; bottom: 10%; height: 51% }
+.shelter-art.scene-full .resident-A { left: 16%; bottom: 12%; height: 55% }
+.shelter-art.scene-empty .resident-A { left: 15%; bottom: 10%; height: 51% }
+
+.shelter-art .resident-B { left: 22%; bottom: 15%; height: 49%; z-index: 85 }
+.shelter-art.scene-full .resident-B { left: 24%; bottom: 17%; height: 48% }
+.shelter-art.scene-empty .resident-B { left: 23%; bottom: 16%; height: 46% }
