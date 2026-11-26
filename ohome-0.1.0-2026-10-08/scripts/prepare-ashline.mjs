@@ -68,6 +68,8 @@ function tuneSearchLoot(source) {
 }
 const districtHtml = independentMissions(inventoryPanels(upgradeRest(characterViews(encounterViews(travelViews(tuneSearchLoot(html)))))))
   .replace('id="roleThread"', 'id="roleThread" data-room-id="${esc(r.id)}"')
+  .replace('const pictured={', "const restingSurvivor=state.users.A?.location==='sewer' && hasFacility('bed') ? state.users.A : null;\n const pictured={")
+  .replace('시설 ${installed}개">${props}</div>', '시설 ${installed}개${restingSurvivor ? " · "+esc(restingSurvivor.name)+" 휴식 중" : ""}">${props}${restingSurvivor ? `<img class="shelter-resident" src="/ashline/scenes/survivor-a-resting.webp" alt="">` : ""}</div>')
   .replace('</head>', () => '<style>'+compactStyles+'</style></head>')
   .replace('<p class="muted" style="margin:10px 0 0">${it.desc}</p>', '${itemDetails(k)}')
   .replace("!['bandage','soup','meal','can','water'].includes(k)", "!consumableEffects[k]")

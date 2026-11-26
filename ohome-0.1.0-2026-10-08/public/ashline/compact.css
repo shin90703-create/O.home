@@ -84,3 +84,16 @@
 .district-map > .ash-toxic-fog { z-index: 2; pointer-events: none }
 .district-map > .weather-effects { opacity: .75 }
 .district-map > .ash-toxic-fog.active { opacity: .6 }
+
+.shelter-art .shelter-resident {
+  position: absolute;
+  left: 13%;
+  bottom: 9%;
+  height: 57%;
+  width: auto;
+  z-index: 86;
+  pointer-events: none;
+  filter: brightness(.87) drop-shadow(1px 2px 2px #100c0966);
+}
+.shelter-art.scene-full .shelter-resident { left: 16%; bottom: 12%; height: 55% }
+.shelter-art.scene-empty .shelter-resident { left: 15%; bottom: 10%; height: 51% }
