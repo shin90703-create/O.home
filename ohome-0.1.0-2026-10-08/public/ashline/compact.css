@@ -78,3 +78,9 @@
   position:absolute; right:12px; top:12px; padding:3px 8px; font-size:12px;
   color:#f3d2c2; background:#17171dea; border:1px solid #9a7669;
 }
+
+/* Keep the district markers and chapter label above the local weather. */
+.district-map > .weather-effects,
+.district-map > .ash-toxic-fog { z-index: 2; pointer-events: none }
+.district-map > .weather-effects { opacity: .75 }
+.district-map > .ash-toxic-fog.active { opacity: .6 }

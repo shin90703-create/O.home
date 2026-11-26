@@ -83,6 +83,8 @@ const districtHtml = independentMissions(inventoryPanels(upgradeRest(characterVi
   .replaceAll('· Open-Meteo','· 기상청 관측')
   .replace('function displayWeatherKind()', () => localWeather+'\nfunction displayWeatherKind()')
   .replaceAll('data-mode="${displayWeatherKind()}">${drawWeatherParticles(displayWeatherKind())}', 'data-mode="${localPrecipitation() || displayWeatherKind()}">${drawWeatherParticles(localPrecipitation() || displayWeatherKind())}')
+  .replace("function updateWeatherDisplay(){\n if(ui.page!=='home')return;", "function updateWeatherDisplay(){\n if(ui.page!=='home' && ui.page!=='map')return;")
+  .replace('<div class="district-chapter">', '<div class="weather-effects" id="ashWeatherEffects" aria-hidden="true"></div><div class="ash-toxic-fog ${toxicFogActive()?"active":""}" id="ashFogLayer" aria-hidden="true"><i></i><i></i><i></i></div><div class="district-chapter">')
   .replace('const kind=displayWeatherKind();', 'const local=localPrecipitation(), kind=local || displayWeatherKind();')
   .replace('if(icon)icon.textContent=weatherIcon(kind,', 'if(icon)icon.textContent=weatherIcon(displayWeatherKind(),')
   .replace('<div class="weather-status-row">', '<div class="tinylabel" id="ashLocalWeather">${localWeatherLabel(localPrecipitation())}</div><div class="weather-status-row">')
