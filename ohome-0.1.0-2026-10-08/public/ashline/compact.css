@@ -131,7 +131,7 @@
 .shelter-art.scene-full .resident-A { left: 16%; bottom: 12%; height: 55% }
 .shelter-art.scene-empty .resident-A { left: 15%; bottom: 10%; height: 51% }
 
-.shelter-art .resident-B { left: 21%; bottom: 17%; height: 46%; z-index: 85;
+.shelter-art .resident-B { left: 21%; bottom: 17%; height: 49%; z-index: 85;
   aspect-ratio: 740 / 775;
   --seat-x: 30%;
   --seat-y: 60%;
