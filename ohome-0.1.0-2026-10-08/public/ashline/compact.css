@@ -86,6 +86,7 @@
 .district-map > .ash-toxic-fog.active { opacity: .6 }
 
 .shelter-art .shelter-resident {
+  opacity: 0; /* Hidden until the final character artwork is ready. */
   position: absolute;
   left: 13%;
   bottom: 9%;
