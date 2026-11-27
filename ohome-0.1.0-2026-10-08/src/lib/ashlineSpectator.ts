@@ -20,13 +20,13 @@ function publicView(payload: World['payload']) {
   const bySlot = (source: unknown, project: (v: Record<string,unknown>)=>unknown) =>
     Object.fromEntries(['A','B'].map(id => [id,project(record(record(source)[id]))]));
   const base = record(g.base);
-  const visibleMission = (session: Record<string,unknown>) => session.siteId ? {...pick(session,'siteId status stage leader kind enemyHp enemyLevel warehouse'),participants:slots(session.participants),loot:counts(session.loot),actions:pick(session.actions,'A B'),logs:[]} : null;
+  const visibleMission = (session: Record<string,unknown>) => session.siteId ? {...pick(session,'siteId status stage leader kind enemyHp enemyLevel enemyKind warehouse'),participants:slots(session.participants),loot:counts(session.loot),actions:pick(session.actions,'A B'),logs:[]} : null;
   const messages = (v: unknown) => rows(v).map(m=>pick(m,'id from text time edited kind'));
   return { schema:2, game:{
     users:bySlot(g.users,u=>({...pick(u,'name zone location hp sp wounds lastRest'),equipment:pick(u.equipment,'face weapon armor tool'),inv:counts(u.inv)})),
     profiles:bySlot(g.profiles,p=>({...pick(p,'name roman role gender age height quote bio image registered faceX faceY faceZoom'),keywords:strings(p.keywords)})),
     base:{...pick(base,'level'),facilities:Object.fromEntries(Object.entries(record(base.facilities)).filter(([k,v])=>Object.prototype.hasOwnProperty.call(facilities,k)&&!!v).map(([k])=>[k,true]))},
-    story:pick(g.story,'chapter completed'),...pick(g,'generation refreshAt'),
+    story:pick(g.story,'chapter completed fogChapter clues lastSupply receiver circuitKnown filterKnown metTrader'),...pick(g,'generation refreshAt'),
     sites:rows(g.sites).map(s=>pick(s,'id done')),fogCycle:pick(g.fogCycle,'lastStart activeUntil nextStart'),
     session:visibleMission(record(g.session)), soloMissions:bySlot(g.soloMissions,visibleMission),
     roleplays:rows(g.roleplays).filter(r=>r.spectatorPublic===true).map(r=>({...pick(r,'id title creator status createdAt createdDate completedAt'),participants:slots(r.participants),messages:messages(r.messages)})),

@@ -24,6 +24,8 @@ Object.assign(LOCATIONS.sewer, {
   desc:'목척교 아래, 하천 옆에 자리 잡은 두 사람의 거점. 물이 잦아들면 건너편 중앙시장 쪽 셔터들이 보인다.'
 });
 `;
+const fogChapter = await read('fog-chapter.js');
+import { chapterViews } from './ashline-chapter-views.mjs';
 const localWeather = await read('local-weather.js');
 const rpScroll = await read('rp-scroll.js');
 const rpDrafts = await read('rp-drafts.js');
@@ -96,7 +98,7 @@ const districtHtml = independentMissions(inventoryPanels(upgradeRest(characterVi
   .replaceAll('마지막 수신','관측 시각')
   .replaceAll('대전 일반 생활권을 모티브로 제작한 가상 도시 지도.', '은행동과 목척교 일대를 모티브로 한 가상 생활권 지도.')
   .replaceAll('<b>B-03 생활권</b></div>${mapPins()}', '<b>B-03 은행동 · 목척교</b></div>${mapPins()}');
-const inject = (source, hooks) => source.replace(marker, () => itemEffects+'\n'+characterHelpers+'\n'+districtLandmarks+'\n'+hooks+'\n'+rpScroll+'\n'+marker);
+const inject = (source, hooks) => chapterViews(source).replace(marker, () => itemEffects+'\n'+fogChapter+'\n'+characterHelpers+'\n'+districtLandmarks+'\n'+hooks+'\n'+rpScroll+'\n'+marker);
 const draftHooks = [
   ["if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&e.target?.id==='rpInput')", "if(e.key==='Enter'&&!e.isComposing&&(e.ctrlKey||e.metaKey)&&e.target?.id==='rpInput')"],
   ['id="rpInput" rows=', 'id="rpInput" data-rp-room="${esc(r.id)}" rows='],

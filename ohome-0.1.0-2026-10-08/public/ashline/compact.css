@@ -171,3 +171,11 @@
 .btn[data-action="use"]:focus-visible { outline: 2px solid #def3ed; outline-offset: 2px }
 .btn[data-action="gift"]:enabled { background: #23303b; border-color: #677581; color: #d0dae1 }
 .btn[data-action="gift"]:enabled:hover { background: #34434f }
+
+@media (max-width: 780px) {
+  .grid.base-grid, .grid.mission-layout { grid-template-columns: minmax(0, 1fr) !important; }
+  .base-grid > .panel:last-child { order: -1; }
+  .mission-layout > * { min-width: 0; }
+  .mission-layout .mission-bg h2 { font-size: clamp(22px, 6vw, 32px); word-break: keep-all; }
+  .mission-layout .panel-body { overflow-wrap: anywhere; }
+}

@@ -50,14 +50,18 @@ function installHomeLore(doc) {
     button.setAttribute('aria-label', page.label);
     button.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + page.icon + '</svg>';
     button.onclick = () => {
-      title.textContent = page.label;
-      article.innerHTML = page.body;
+      const n = page === lorePages[2] ? Number(doc.documentElement.dataset.chapter || 0) : 0;
+      title.textContent = n ? '챕터 '+n : page.label;
+      article.innerHTML = n === 1 ? '<h3>안개 속 수색</h3><p>두 사람 몫의 방독면을 확보했다. 안개 속 보급 신호를 따라가 단서 세 가지를 모으자.</p>' : n === 2 ? '<h3>동광장의 교역상</h3><p>중앙로역 승강장에서 교역상의 접선 표식을 확인하자.</p>' : page.body;
       dialog.showModal();
       dialog.scrollTop = 0;
     };
     controls.append(button);
   });
   const attach = () => {
+    const chapterButton = controls.lastElementChild;
+    chapterButton.title = '챕터 '+(doc.documentElement.dataset.chapter || 0);
+    chapterButton.setAttribute('aria-label',chapterButton.title);
     const signature = doc.querySelector('.cinematic-entry .ash-home-signature');
     if (signature && controls.parentElement !== signature) signature.append(controls);
     if (!signature && dialog.open) dialog.close();
