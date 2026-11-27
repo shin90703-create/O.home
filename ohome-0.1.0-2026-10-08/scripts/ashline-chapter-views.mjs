@@ -35,5 +35,6 @@ export function chapterViews(html) {
   replace('mob-hide">CH.01</span>', 'mob-hide">CH.0${chapterNumber()}</span>');
   replace('CH.01 / MISSION BRIEF','CH.0${chapterNumber()} / MISSION BRIEF');
   replace('function mapPage(){return `', 'function mapPage(){return (chapterNumber()?campaignGoal():"")+`');
+  replace('<div class="itemfoot mob-hide">SP <strong>', '<div class="itemfoot" aria-label="행동력">SP <strong>');
   return html;
 }
